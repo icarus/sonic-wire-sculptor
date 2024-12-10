@@ -2,14 +2,24 @@ import React, { useRef, useState, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
 import * as handpose from "@tensorflow-models/handpose";
 import Webcam from "react-webcam";
-import "./App.css";
 import { drawHand } from "./utils";
+import "./App.css";
+import { playCalmSound } from "./sound";
 
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const [devices, setDevices] = useState([]);
   const [cameraIndex, setCameraIndex] = useState(0);
+  const [fingersState, setFingersState] = useState({
+    thumb: false,
+    index: false,
+    middle: false,
+    ring: false,
+    pinky: false,
+  });
+
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
   // Load the handpose model
   const runHandpose = async () => {
@@ -43,7 +53,9 @@ function App() {
 
       // Make detections
       const hand = await net.estimateHands(video);
-      console.log(hand);
+
+      // Check finger states and trigger sounds
+      updateFingersState(hand);
 
       // Draw mesh
       const ctx = canvasRef.current.getContext("2d");
@@ -91,6 +103,58 @@ function App() {
       runHandpose();
     }
   }, [devices]);
+
+  // Function to check the state of each finger
+  const updateFingersState = (hands) => {
+    if (hands.length > 0) {
+      const hand = hands[0];
+      const landmarks = hand.landmarks;
+
+      const thumbState = isFingerOpen(landmarks[3], landmarks[2]);
+      const indexState = isFingerOpen(landmarks[6], landmarks[5]);
+      const middleState = isFingerOpen(landmarks[10], landmarks[9]);
+      const ringState = isFingerOpen(landmarks[14], landmarks[13]);
+      const pinkyState = isFingerOpen(landmarks[18], landmarks[17]);
+
+      setFingersState({
+        thumb: thumbState,
+        index: indexState,
+        middle: middleState,
+        ring: ringState,
+        pinky: pinkyState,
+      });
+
+      // Trigger sound or action based on open fingers
+      playSound(thumbState, indexState, middleState, ringState, pinkyState);
+    }
+  };
+
+  // Check if the finger is open based on joint distance
+  const isFingerOpen = (joint1, joint2) => {
+    const distance = Math.sqrt(
+      Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
+    );
+    return distance > 50; // Adjust distance threshold for your needs
+  };
+
+  // Play sound based on finger state (open = play note, closed = stop)
+  const playSound = (thumb, index, middle, ring, pinky) => {
+    if (thumb) {
+      playCalmSound(20); // A note for thumb
+    }
+    if (index) {
+      playCalmSound(40); // C# note for index
+    }
+    if (middle) {
+      playCalmSound(60); // E note for middle
+    }
+    if (ring) {
+      playCalmSound(80); // A note for ring
+    }
+    if (pinky) {
+      playCalmSound(100); // B note for pinky
+    }
+  };
 
   return (
     <div className="webcam">
