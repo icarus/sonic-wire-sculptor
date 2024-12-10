@@ -1,46 +1,104 @@
-# Getting Started with Create React App
+Aquí tienes el README modificado para adaptarse a un proyecto que es un clon del **Sonic Wire Sculptor** de **Amit Pitaru**:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+# Clon del Sonic Wire Sculptor
 
-In the project directory, you can run:
+## Descripción
 
-### `npm start`
+Este proyecto es un clon interactivo del **Sonic Wire Sculptor** creado por **Amit Pitaru**. El Sonic Wire Sculptor original es una experiencia audiovisual en la que puedes "esculpir" el sonido y crear música al mover tus dedos en el aire, generando ondas de sonido. Usando tu cámara web, este clon detecta tus manos y dedos, permitiéndote crear formas de sonido dinámicas y visuales de manera similar al concepto original.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Este proyecto está construido con **React**, **TensorFlow.js**, y **Tone.js**, y permite una experiencia interactiva donde puedes "esculpir" sonidos mientras mueves tus dedos, todo en tiempo real.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Requisitos Previos
 
-### `npm test`
+Este proyecto está diseñado para personas con poca o ninguna experiencia en programación, pero necesitarás tener algunas herramientas básicas instaladas:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Conocimientos Básicos de JavaScript**: Es útil tener una comprensión básica de cómo funcionan los archivos JavaScript y cómo se ejecutan en tu navegador.
+- **Instalar Node.js**: Este proyecto utiliza Node.js para ejecutarse en tu computadora. Si aún no lo tienes, sigue las instrucciones a continuación.
 
-### `npm run build`
+### Pasos para instalar Node.js
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Descargar Node.js**: Ve a [nodejs.org](https://nodejs.org/) y descarga la última versión LTS (recomendada).
+2. **Instalar Node.js**: Sigue las instrucciones según tu sistema operativo (Windows, macOS, Linux).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Instalación
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Para comenzar a trabajar con este proyecto, sigue estos pasos:
 
-### `npm run eject`
+### 1. Clonar el repositorio
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Primero, debes clonar el proyecto a tu computadora. Abre tu terminal o línea de comandos y ejecuta:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+git clone https://github.com/tu-usuario/clon-sonic-wire-sculptor.git
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### 2. Instalar las dependencias
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Entra en la carpeta del proyecto:
 
-## Learn More
+```bash
+cd clon-sonic-wire-sculptor
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Luego, instala las dependencias necesarias con:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+npm install
+```
+
+Esto instalará todas las bibliotecas que el proyecto necesita para funcionar correctamente.
+
+### 3. Iniciar el servidor
+
+Para ver el proyecto en acción, usa el siguiente comando para iniciar un servidor local:
+
+```bash
+npm start
+```
+
+Esto abrirá el proyecto en tu navegador. La aplicación debería estar funcionando y lista para interactuar con la cámara web.
+
+## Cómo Funciona
+
+### 1. **Visualización de la Cámara Web**
+
+El proyecto utiliza tu cámara web para capturar imágenes de tus manos en tiempo real.
+
+### 2. **Detección de Manos con TensorFlow.js**
+
+Usamos **TensorFlow.js**, una biblioteca de aprendizaje automático para JavaScript, para detectar la posición y los movimientos de tus manos y dedos. La detección en tiempo real permite que la aplicación responda a los movimientos de tus dedos, lo que te permite "esculpir" el sonido al moverlos.
+
+### 3. **Creación de Sonidos con Tone.js**
+
+**Tone.js** es una librería para generar sonidos en la web. A medida que mueves tus manos, el proyecto genera sonidos dinámicos y únicos, basados en la posición y los gestos de tus dedos. La idea es emular el concepto de esculpir música en el aire, como en el Sonic Wire Sculptor original.
+
+### 4. **Escultura Visual y Sonora**
+
+Cuando mueves tus dedos, las ondas sonoras se visualizan de forma interactiva en la pantalla. La interacción de tus manos con el espacio genera figuras y sonidos, como si estuvieras creando esculturas de sonido en tiempo real.
+
+## Estructura del Código
+
+El proyecto está dividido en varios componentes para facilitar la comprensión y la extensión:
+
+- **App.js**: El archivo principal que maneja la aplicación y conecta todos los otros componentes.
+- **WebcamDisplay.js**: Muestra la imagen de la cámara web en tiempo real.
+- **HandposeDetection.js**: Usa TensorFlow.js para detectar las manos y dedos en la cámara web.
+- **SoundSculpting.js**: Genera los sonidos basados en los movimientos y gestos de los dedos utilizando Tone.js.
+- **Visualizer.js**: Muestra una representación visual de las ondas de sonido generadas.
+
+## Funcionalidades Clave
+
+- **Escultura de Sonido Interactiva**: A medida que mueves tus dedos, puedes crear y modificar sonidos en tiempo real.
+- **Cambio de Cámara**: Si tienes varias cámaras conectadas, puedes cambiar entre ellas usando las teclas de flecha.
+- **Representación Visual de las Ondas Sonoras**: A medida que "esculpes" los sonidos, verás representaciones visuales de las ondas generadas en la pantalla.
+
+
+## Licencia
+
+Este proyecto es de código abierto y está bajo la licencia MIT.
+
+---
+
+Este README está diseñado para explicar de manera sencilla qué es lo que hace el proyecto, cómo configurarlo y cómo interactuar con él, manteniendo el enfoque en el clon del **Sonic Wire Sculptor** de **Amit Pitaru**.
