@@ -11,7 +11,7 @@ function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const [devices, setDevices] = useState([]);
-  const [cameraIndex, setCameraIndex] = useState(0);
+  const [cameraIndex, setCameraIndex] = useState(1);
   const [fingersState, setFingersState] = useState({
     thumb: false,
     index: false,

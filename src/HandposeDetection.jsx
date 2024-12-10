@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import * as handpose from "@tensorflow-models/handpose";
 import { drawHand } from "./utils";
 
@@ -67,9 +67,15 @@ const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound })
         pinky: pinkyState,
       });
 
-      playSound(thumbState, indexState, middleState, ringState, pinkyState);
+      // Trigger sound only for the open fingers
+      if (thumbState) playSound("thumb");
+      if (indexState) playSound("index");
+      if (middleState) playSound("middle");
+      if (ringState) playSound("ring");
+      if (pinkyState) playSound("pinky");
     }
   };
+
 
   const isFingerOpen = (joint1, joint2) => {
     const distance = Math.sqrt(

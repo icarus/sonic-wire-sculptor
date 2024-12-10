@@ -1,29 +1,21 @@
-import React, { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { playCalmSound } from "./sound";
 
-let timeout;
-
 const FingerState = ({ fingersState }) => {
-  useEffect(() => {
-    clearTimeout(timeout);
+  const timeout = useRef(null);
 
-    timeout = setTimeout(() => {
-      if (fingersState.thumb) {
-        playCalmSound("thumb");
-      }
-      if (fingersState.index) {
-        playCalmSound("index");
-      }
-      if (fingersState.middle) {
-        playCalmSound("middle");
-      }
-      if (fingersState.ring) {
-        playCalmSound("ring");
-      }
-      if (fingersState.pinky) {
-        playCalmSound("pinky");
-      }
+  useEffect(() => {
+    clearTimeout(timeout.current);
+
+    timeout.current = setTimeout(() => {
+      Object.keys(fingersState).forEach((finger) => {
+        if (fingersState[finger]) {
+          playCalmSound(finger);
+        }
+      });
     }, 150);
+
+    return () => clearTimeout(timeout.current); // Cleanup on unmount or fingerState change
   }, [fingersState]);
 
   return null;
