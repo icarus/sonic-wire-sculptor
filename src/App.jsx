@@ -148,32 +148,32 @@ function App() {
     const distance = Math.sqrt(
       Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
     );
-    return distance > 10; // Adjust distance threshold for your needs
+    return distance > 50; // Adjust distance threshold for your needs
   };
+
 
   let timeout;
 
   const playSound = (thumb, index, middle, ring, pinky) => {
-    // Clear previous timeout to prevent multiple triggers in quick succession
     clearTimeout(timeout);
 
     timeout = setTimeout(() => {
       if (thumb) {
-        playCalmSound(20); // A note for thumb
+        playCalmSound("thumb");
       }
       if (index) {
-        playCalmSound(140); // C# note for index
+        playCalmSound("index");
       }
       if (middle) {
-        playCalmSound(270); // E note for middle
+        playCalmSound("middle");
       }
       if (ring) {
-        playCalmSound(500); // A note for ring
+        playCalmSound("ring");
       }
       if (pinky) {
-        playCalmSound(800); // B note for pinky
+        playCalmSound("pinky");
       }
-    }, 150); // Delay time in milliseconds
+    }, 150);
   };
 
   return (
