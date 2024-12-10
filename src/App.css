@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 body {
 	margin: 80px;
 	background-color: #F7F7ED;
@@ -15,6 +11,7 @@ body {
 
 .webcam {
   @apply max-w-screen-md;
+	position: absolute;
     margin-left: auto;
     margin-right: auto;
     left: 0;
@@ -36,22 +33,4 @@ canvas {
 	width: 640;
 	height: 480;
 
-}
-
-.container {
-  width: 500px;
-  height: 500px;
-  position: relative;
-  margin: 0 auto;
-  perspective: 1000px; /* Adds perspective to create depth */
-}
-
-.orbiting-object {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  background-color: #3498db;
-  border-radius: 50%;
-  transform-origin: center; /* Set the rotation point at the center */
-  transition: transform 1s ease-in-out; /* Optional: to make smooth transitions */
 }

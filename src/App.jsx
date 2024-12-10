@@ -40,7 +40,7 @@ function App() {
   }, []);
 
   return (
-    <div className="!text-red-500">
+    <div className="webcam">
       <WebcamDisplay webcamRef={webcamRef} canvasRef={canvasRef} videoConstraints={videoConstraints} />
       <CameraControls devices={devices} cameraIndex={cameraIndex} setCameraIndex={setCameraIndex} />
       <HandposeDetection

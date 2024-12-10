@@ -3,7 +3,7 @@ import Webcam from "react-webcam";
 
 const WebcamDisplay = ({ videoConstraints, webcamRef, canvasRef }) => {
   return (
-    <div className="webcam">
+    <>
       <Webcam
         ref={webcamRef}
         videoConstraints={videoConstraints}
@@ -12,7 +12,7 @@ const WebcamDisplay = ({ videoConstraints, webcamRef, canvasRef }) => {
         height="100%"
       />
       <canvas ref={canvasRef} />
-    </div>
+    </>
   );
 };
 

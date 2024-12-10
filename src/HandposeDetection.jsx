@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import * as handpose from "@tensorflow-models/handpose";
+import { drawHand } from "./utils";
 
 const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound }) => {
   useEffect(() => {
@@ -7,30 +8,41 @@ const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound })
       const net = await handpose.load();
       console.log("Handpose model loaded.");
 
-      setInterval(() => {
-        detect(net);
-      }, 200);
-    };
+      const detect = async () => {
+        if (webcamRef.current?.video?.readyState === 4) {
+          const video = webcamRef.current.video;
+          const videoWidth = video.videoWidth;
+          const videoHeight = video.videoHeight;
 
-    const detect = async (net) => {
-      if (webcamRef.current?.video?.readyState === 4) {
-        const video = webcamRef.current.video;
-        const videoWidth = video.videoWidth;
-        const videoHeight = video.videoHeight;
+          if (videoWidth === 0 || videoHeight === 0) {
+            console.error("Invalid video dimensions");
+            return;
+          }
 
-        if (videoWidth === 0 || videoHeight === 0) {
-          console.error("Invalid video dimensions");
-          return;
+          // Set video and canvas dimensions
+          webcamRef.current.video.width = videoWidth;
+          webcamRef.current.video.height = videoHeight;
+          canvasRef.current.width = videoWidth;
+          canvasRef.current.height = videoHeight;
+
+          // Detect hand pose
+          const hand = await net.estimateHands(video);
+          updateFingersState(hand);
+
+          const ctx = canvasRef.current.getContext("2d");
+
+          // Clear canvas before drawing (important for preventing residual drawing)
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+          // Draw the hand pose landmarks
+          drawHand(hand, ctx, videoWidth, videoHeight);
+
+          // Request the next animation frame
+          requestAnimationFrame(detect);
         }
+      };
 
-        webcamRef.current.video.width = videoWidth;
-        webcamRef.current.video.height = videoHeight;
-        canvasRef.current.width = videoWidth;
-        canvasRef.current.height = videoHeight;
-
-        const hand = await net.estimateHands(video);
-        updateFingersState(hand);
-      }
+      detect();
     };
 
     runHandpose();
@@ -63,7 +75,7 @@ const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound })
     const distance = Math.sqrt(
       Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
     );
-    return distance > 50; // Adjust distance threshold for your needs
+    return distance > 50; // Adjust threshold based on your needs
   };
 
   return null;
