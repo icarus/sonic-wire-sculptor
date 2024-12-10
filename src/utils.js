@@ -44,13 +44,13 @@ export const drawHand = (predictions, ctx) => {
       // Loop through fingers
       for (let j = 0; j < Object.keys(fingerJoints).length; j++) {
         let finger = Object.keys(fingerJoints)[j];
-        // Loop through pairs of joints
+        //  Loop through pairs of joints
         for (let k = 0; k < fingerJoints[finger].length - 1; k++) {
           // Get pairs of joints
           const firstJointIndex = fingerJoints[finger][k];
           const secondJointIndex = fingerJoints[finger][k + 1];
 
-          // Draw path with reduced opacity
+          // Draw path
           ctx.beginPath();
           ctx.moveTo(
             landmarks[firstJointIndex][0],
@@ -60,13 +60,13 @@ export const drawHand = (predictions, ctx) => {
             landmarks[secondJointIndex][0],
             landmarks[secondJointIndex][1]
           );
-          ctx.strokeStyle = "rgba(221, 160, 221, 0)"; // Reduced opacity (0.5)
+          ctx.strokeStyle = "plum";
           ctx.lineWidth = 4;
           ctx.stroke();
         }
       }
 
-      // Loop through landmarks and draw them with reduced opacity
+      // Loop through landmarks and draw em
       for (let i = 0; i < landmarks.length; i++) {
         // Get x point
         const x = landmarks[i][0];
@@ -76,19 +76,10 @@ export const drawHand = (predictions, ctx) => {
         ctx.beginPath();
         ctx.arc(x, y, style[i]["size"], 0, 3 * Math.PI);
 
-        // Set fill color with reduced opacity
-        ctx.fillStyle = `rgba(${hexToRgb(style[i]["color"]).r}, ${hexToRgb(style[i]["color"]).g}, ${hexToRgb(style[i]["color"]).b}, 0)`; // Adjust opacity (0.5)
+        // Set line color
+        ctx.fillStyle = style[i]["color"];
         ctx.fill();
       }
     });
   }
 };
-
-// Helper function to convert hex color to RGB
-function hexToRgb(hex) {
-  const hexValue = hex.replace("#", "");
-  const r = parseInt(hexValue.substring(0, 2), 16);
-  const g = parseInt(hexValue.substring(2, 4), 16);
-  const b = parseInt(hexValue.substring(4, 6), 16);
-  return { r, g, b };
-}
