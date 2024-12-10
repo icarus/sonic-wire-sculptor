@@ -6,6 +6,7 @@ import { drawHand } from "./utils";
 import "./App.css";
 import { playCalmSound } from "./sound";
 
+
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -19,6 +20,7 @@ function App() {
     pinky: false,
   });
 
+
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
   // Load the handpose model
@@ -29,7 +31,7 @@ function App() {
     // Loop and detect hands
     setInterval(() => {
       detect(net);
-    }, 100);
+    }, 200);
   };
 
   // Detect hands
@@ -40,8 +42,14 @@ function App() {
       webcamRef.current.video.readyState === 4
     ) {
       const video = webcamRef.current.video;
-      const videoWidth = webcamRef.current.video.videoWidth;
-      const videoHeight = webcamRef.current.video.videoHeight;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      // Check if dimensions are non-zero before proceeding
+      if (videoWidth === 0 || videoHeight === 0) {
+        console.error("Invalid video dimensions");
+        return;
+      }
 
       // Set video width and height
       webcamRef.current.video.width = videoWidth;
@@ -53,8 +61,6 @@ function App() {
 
       // Make detections
       const hand = await net.estimateHands(video);
-
-      // Check finger states and trigger sounds
       updateFingersState(hand);
 
       // Draw mesh
@@ -63,15 +69,23 @@ function App() {
     }
   };
 
+
   // Get available video devices
   useEffect(() => {
     const getDevices = async () => {
       const deviceInfos = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = deviceInfos.filter((device) => device.kind === "videoinput");
       setDevices(videoDevices);
+
+      // Handle the case where no devices are found
+      if (videoDevices.length === 0) {
+        console.error("No video devices found.");
+        return;
+      }
     };
     getDevices();
   }, []);
+
 
   // Handle arrow key press to change the camera
   useEffect(() => {
@@ -102,7 +116,7 @@ function App() {
     if (devices.length > 0) {
       runHandpose();
     }
-  }, [devices]);
+  }, [devices, cameraIndex]);
 
   // Function to check the state of each finger
   const updateFingersState = (hands) => {
@@ -134,26 +148,32 @@ function App() {
     const distance = Math.sqrt(
       Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
     );
-    return distance > 50; // Adjust distance threshold for your needs
+    return distance > 10; // Adjust distance threshold for your needs
   };
 
-  // Play sound based on finger state (open = play note, closed = stop)
+  let timeout;
+
   const playSound = (thumb, index, middle, ring, pinky) => {
-    if (thumb) {
-      playCalmSound(20); // A note for thumb
-    }
-    if (index) {
-      playCalmSound(40); // C# note for index
-    }
-    if (middle) {
-      playCalmSound(60); // E note for middle
-    }
-    if (ring) {
-      playCalmSound(80); // A note for ring
-    }
-    if (pinky) {
-      playCalmSound(100); // B note for pinky
-    }
+    // Clear previous timeout to prevent multiple triggers in quick succession
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+      if (thumb) {
+        playCalmSound(20); // A note for thumb
+      }
+      if (index) {
+        playCalmSound(140); // C# note for index
+      }
+      if (middle) {
+        playCalmSound(270); // E note for middle
+      }
+      if (ring) {
+        playCalmSound(500); // A note for ring
+      }
+      if (pinky) {
+        playCalmSound(800); // B note for pinky
+      }
+    }, 150); // Delay time in milliseconds
   };
 
   return (

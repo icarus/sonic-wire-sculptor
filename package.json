@@ -10,6 +10,7 @@
     "react-dom": "^19.0.0",
     "react-scripts": "5.0.1",
     "react-webcam": "^7.2.0",
+    "three": "^0.171.0",
     "tone": "^15.0.4",
     "web-vitals": "^4.2.4"
   },
