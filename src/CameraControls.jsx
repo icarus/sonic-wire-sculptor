@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { Button } from "./components/ui/button";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const CameraControls = ({ devices, cameraIndex, setCameraIndex }) => {
   useEffect(() => {
@@ -20,14 +22,36 @@ const CameraControls = ({ devices, cameraIndex, setCameraIndex }) => {
     };
   }, [devices, setCameraIndex]);
 
+  // Handlers for the buttons
+  const handleNextCamera = () => {
+    setCameraIndex((prevIndex) => Math.min(devices.length - 1, prevIndex + 1));
+  };
+
+  const handlePreviousCamera = () => {
+    setCameraIndex((prevIndex) => Math.max(0, prevIndex - 1));
+  };
+
   return (
-    <div>
-      <p>Current Camera: {devices[cameraIndex]?.label || "Unknown"}</p>
+    <>
+      <h3 className="line-clamp-1">TÚ CÁMARA: {devices[cameraIndex]?.label || "Unknown"}</h3>
       <p>
-        Use Arrow Up/Right to switch to next camera, Arrow Down/Left to switch
-        to previous camera
+        Cambia la cámara con las flechas para izquierda o derecha.
       </p>
-    </div>
+      <div className="flex">
+        <Button
+          disabled={cameraIndex === 0}
+          onClick={handlePreviousCamera}
+        >
+          <ArrowLeft />
+        </Button>
+        <Button
+          disabled={cameraIndex === devices.length - 1}
+          onClick={handleNextCamera}
+        >
+          <ArrowRight />
+        </Button>
+      </div>
+    </>
   );
 };
 

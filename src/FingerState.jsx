@@ -15,7 +15,7 @@ const FingerState = ({ fingersState }) => {
       });
     }, 150);
 
-    return () => clearTimeout(timeout.current); // Cleanup on unmount or fingerState change
+    return () => clearTimeout(timeout.current);
   }, [fingersState]);
 
   return null;

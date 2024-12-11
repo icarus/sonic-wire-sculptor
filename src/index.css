@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'VCR OSD MONO';
+  src: local('VCROSD'), url('../public/fonts/VCR_OSD_MONO_1.001.ttf') format('truetype');
+}
+
+#root {
+  @apply h-svh max-h-screen overflow-y-hidden;
+}
+
+body {
+  @apply uppercase antialiased min-h-svh bg-neutral-50 text-neutral-800;
+  font-family: 'VCR OSD MONO', monospace;
+}
+
+canvas {
+	position: absolute;
+	margin-left: "auto";
+	margin-right: "auto";
+	left: 0;
+	right: 0;
+	text-align: "center";
+	z-index: 9;
+	width: 640;
+	height: 480;
+
+}

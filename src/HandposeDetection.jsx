@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import * as handpose from "@tensorflow-models/handpose";
-import { drawHand } from "./utils";
+import { drawHand } from "./lib/fingers";
 
 const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound }) => {
   useEffect(() => {
