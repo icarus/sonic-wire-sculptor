@@ -35,7 +35,7 @@ const WebcamDisplay = ({ videoConstraints, webcamRef, canvasRef }) => {
         ref={canvasRef}
         width={videoDimensions.width}
         height={videoDimensions.height}
-        className="z-50 absolute inset-0 size-full m-auto"
+        className="z-50 hidden absolute inset-0 size-full m-auto"
       />
     </div>
   );

@@ -1,52 +1,110 @@
 import * as Tone from 'tone';
 
 let synths = {};
+let effects = {};
+
+// Initialize effects with minimal decay
+effects.reverb = new Tone.Reverb({ decay: 0.5, wet: 0.2 }).toDestination();
+effects.delay = new Tone.PingPongDelay("16n", 0.2).toDestination();
+effects.distortion = new Tone.Distortion(0.3).toDestination();
+effects.chorus = new Tone.Chorus(4, 2.5, 0.3).toDestination().start();
+effects.filter = new Tone.Filter(2000, "lowpass").toDestination();
+
+export const initializeAudio = async () => {
+  // Start audio context
+  await Tone.start();
+  console.log('Audio is ready');
+
+  // Kick - Tight 808-style kick
+  synths.thumb = new Tone.MembraneSynth({
+    pitchDecay: 0.05,
+    octaves: 5,
+    oscillator: { type: "sine" },
+    envelope: {
+      attack: 0.001,
+      decay: 0.2,
+      sustain: 0,
+      release: 0.1
+    }
+  }).chain(effects.filter);
+
+  // Hi-hat - Sharp, precise sound
+  synths.index = new Tone.MetalSynth({
+    frequency: 200,
+    envelope: {
+      attack: 0.001,
+      decay: 0.05,
+      release: 0.05
+    },
+    harmonicity: 5.1,
+    modulationIndex: 32,
+    resonance: 4000,
+    octaves: 1.5
+  }).chain(effects.chorus, effects.reverb);
+
+  // Clap - Quick, sharp clap
+  synths.middle = new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: {
+      attack: 0.005,
+      decay: 0.1,
+      sustain: 0,
+      release: 0.1
+    }
+  }).chain(effects.reverb);
+
+  // Snare - Tight snare with body
+  synths.ring = new Tone.NoiseSynth({
+    noise: { type: 'pink' },
+    envelope: {
+      attack: 0.001,
+      decay: 0.15,
+      sustain: 0,
+      release: 0.1
+    }
+  }).chain(effects.filter, effects.reverb);
+
+  // Synth - Quick stab with more character
+  synths.pinky = new Tone.Synth({
+    oscillator: {
+      type: "triangle8"
+    },
+    envelope: {
+      attack: 0.01,
+      decay: 0.1,
+      sustain: 0.1,
+      release: 0.1
+    }
+  }).chain(effects.chorus, effects.delay);
+
+  // Start transport
+  Tone.Transport.start();
+};
 
 export const playSound = (finger) => {
   try {
-    let note;
+    const notes = {
+      thumb: "C1",
+      index: "A6",
+      middle: null,
+      ring: null,
+      pinky: "F4"
+    };
 
-    // Define different notes based on the finger
-    switch (finger) {
-      case "thumb":
-        note = "C4"; // Middle C for thumb
-        break;
-      case "index":
-        note = "D4"; // D4 for index
-        break;
-      case "middle":
-        note = "E4"; // E4 for middle
-        break;
-      case "ring":
-        note = "F4"; // F4 for ring
-        break;
-      case "pinky":
-        note = "G4"; // G4 for pinky
-        break;
-      default:
-        note = "C4"; // Default to middle C
-        break;
+    const synth = synths[finger];
+    if (!synth) return;
+
+    // Different handling for each type of sound
+    if (finger === "middle" || finger === "ring") {
+      synth.triggerAttackRelease("16n");
+    } else {
+      synth.triggerAttackRelease(notes[finger], "16n");
     }
-
-    // Create the synth if it doesn't already exist for the finger
-    if (!synths[finger]) {
-      synths[finger] = new Tone.PolySynth(Tone.Synth, {
-        oscillator: {
-          type: "sine", // Simple sine wave for piano-like sound
-        },
-        envelope: {
-          attack: 0.1, // Short attack to simulate piano attack
-          decay: 0.3, // Short decay
-          sustain: 0.8, // Sustain level
-          release: 0.5, // Quick release
-        },
-      }).toDestination();
-    }
-
-    // Trigger the note based on the finger
-    synths[finger].triggerAttackRelease(note, "4n");
-    console.log(`Playing sound for: ${finger}`);
   } catch (error) {
     console.error("Error in playSound:", error);
   }
+};
+
+export const setBPM = (bpm) => {
+  Tone.Transport.bpm.value = bpm;
 };

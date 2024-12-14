@@ -4,12 +4,74 @@ import { drawHand } from "./lib/fingers";
 
 const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound }) => {
   const prevFingersState = useRef({
-    thumb: false,
-    index: false,
-    middle: false,
-    ring: false,
-    pinky: false,
+    leftHand: {
+      thumb: false,
+      index: false,
+      middle: false,
+      ring: false,
+      pinky: false,
+    },
+    rightHand: {
+      thumb: false,
+      index: false,
+      middle: false,
+      ring: false,
+      pinky: false,
+    }
   });
+
+  const FINGER_THRESHOLD = 30;
+
+  const isFingerOpen = (joint1, joint2) => {
+    const distance = Math.sqrt(
+      Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
+    );
+    return distance > FINGER_THRESHOLD;
+  };
+
+  const areStatesEqual = (state1, state2) => {
+    return JSON.stringify(state1) === JSON.stringify(state2);
+  };
+
+  const updateFingersState = (hands) => {
+    const newState = {
+      leftHand: { ...prevFingersState.current.leftHand },
+      rightHand: { ...prevFingersState.current.rightHand }
+    };
+
+    hands.forEach(hand => {
+      const landmarks = hand.landmarks;
+      // Determine if it's the right or left hand based on thumb position
+      const isRightHand = landmarks[4][0] > landmarks[0][0];
+      const handKey = isRightHand ? 'rightHand' : 'leftHand';
+
+      const fingerState = {
+        thumb: isFingerOpen(landmarks[4], landmarks[3]),
+        index: isFingerOpen(landmarks[8], landmarks[7]),
+        middle: isFingerOpen(landmarks[12], landmarks[11]),
+        ring: isFingerOpen(landmarks[16], landmarks[15]),
+        pinky: isFingerOpen(landmarks[20], landmarks[19])
+      };
+
+      // Update the state for the detected hand
+      newState[handKey] = fingerState;
+
+      // Play sounds for newly opened fingers
+      Object.entries(fingerState).forEach(([finger, isOpen]) => {
+        if (isOpen && !prevFingersState.current[handKey][finger]) {
+          // Construct the full finger identifier (e.g., "leftHand_thumb")
+          const fingerIdentifier = `${handKey}_${finger}`;
+          playSound(fingerIdentifier);
+        }
+      });
+    });
+
+    // Update state only if there's a change
+    if (!areStatesEqual(newState, prevFingersState.current)) {
+      setFingersState(newState);
+      prevFingersState.current = newState;
+    }
+  };
 
   useEffect(() => {
     const runHandpose = async () => {
@@ -17,95 +79,28 @@ const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound })
       console.log("Handpose model loaded.");
 
       const detect = async () => {
-        if (webcamRef.current?.video?.readyState === 4) {
+        if (
+          webcamRef.current &&
+          webcamRef.current.video &&
+          webcamRef.current.video.readyState === 4
+        ) {
           const video = webcamRef.current.video;
-          const videoWidth = video.videoWidth;
-          const videoHeight = video.videoHeight;
+          const hands = await net.estimateHands(video);
 
-          if (videoWidth === 0 || videoHeight === 0) {
-            console.error("Invalid video dimensions");
-            return;
+          if (canvasRef.current) {
+            const ctx = canvasRef.current.getContext("2d");
+            drawHand(hands, ctx);
           }
 
-          // Set video and canvas dimensions
-          webcamRef.current.video.width = videoWidth;
-          webcamRef.current.video.height = videoHeight;
-          canvasRef.current.width = videoWidth;
-          canvasRef.current.height = videoHeight;
-
-          // Detect hand pose
-          const hand = await net.estimateHands(video);
-          updateFingersState(hand);
-
-          const ctx = canvasRef.current.getContext("2d");
-
-          // Clear canvas before drawing (important for preventing residual drawing)
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-
-          // Draw the hand pose landmarks
-          drawHand(hand, ctx, videoWidth, videoHeight);
-
-          // Request the next animation frame
-          requestAnimationFrame(detect);
+          updateFingersState(hands);
         }
       };
 
-      detect();
+      setInterval(detect, 100);
     };
 
     runHandpose();
-  }, [webcamRef, canvasRef]);
-
-  const updateFingersState = (hands) => {
-    if (hands.length > 0) {
-      const hand = hands[0];
-      const landmarks = hand.landmarks;
-
-      const thumbState = isFingerOpen(landmarks[4], landmarks[3]);
-      const indexState = isFingerOpen(landmarks[8], landmarks[7]);
-      const middleState = isFingerOpen(landmarks[12], landmarks[11]);
-      const ringState = isFingerOpen(landmarks[16], landmarks[15]);
-      const pinkyState = isFingerOpen(landmarks[20], landmarks[19]);
-
-      const newFingersState = {
-        thumb: thumbState,
-        index: indexState,
-        middle: middleState,
-        ring: ringState,
-        pinky: pinkyState,
-      };
-
-      // Only update state if there is a change
-      if (!areStatesEqual(newFingersState, prevFingersState.current)) {
-        setFingersState(newFingersState);
-        prevFingersState.current = newFingersState;
-      }
-
-      // Trigger sound only for the open fingers
-      if (thumbState && !prevFingersState.current.thumb) playSound("thumb");
-      if (indexState && !prevFingersState.current.index) playSound("index");
-      if (middleState && !prevFingersState.current.middle) playSound("middle");
-      if (ringState && !prevFingersState.current.ring) playSound("ring");
-      if (pinkyState && !prevFingersState.current.pinky) playSound("pinky");
-    }
-  };
-
-  const isFingerOpen = (joint1, joint2) => {
-    const distance = Math.sqrt(
-      Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
-    );
-    return distance > 50; // Adjust threshold based on your needs
-  };
-
-  const areStatesEqual = (state1, state2) => {
-    return (
-      state1.thumb === state2.thumb &&
-      state1.index === state2.index &&
-      state1.middle === state2.middle &&
-      state1.ring === state2.ring &&
-      state1.pinky === state2.pinky
-    );
-  };
+  }, []);
 
   return null;
 };
