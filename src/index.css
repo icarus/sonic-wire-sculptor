@@ -10,9 +10,8 @@
 #root {
   @apply h-svh max-h-screen overflow-y-hidden;
 }
-
 body {
-  @apply uppercase antialiased min-h-svh bg-neutral-50 text-neutral-800;
+  @apply uppercase antialiased min-h-svh bg-neutral-900 text-white;
   font-family: 'VCR OSD MONO', monospace;
 }
 
@@ -26,5 +25,38 @@ canvas {
 	z-index: 9;
 	width: 640;
 	height: 480;
+}
 
+@keyframes line-move {
+  from {
+    left: 0%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.animate-line {
+  animation-name: line-move;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@layer utilities {
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow linear infinite;
+  }
+
+  .rotate {
+    transform: rotate3d(1, 0, 0, 85deg);
+  }
 }

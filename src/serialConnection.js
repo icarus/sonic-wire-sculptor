@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
+import { playSound } from './sound'; // Import the playSound function
 
 const SerialConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState(null);
   const [port, setPort] = useState(null);
-  const [red, setRed] = useState(255);
-  const [green, setGreen] = useState(0);
-  const [blue, setBlue] = useState(0);
+  const [joystickX, setJoystickX] = useState(0);
+  const [joystickY, setJoystickY] = useState(0);
+  const [buttonPressed, setButtonPressed] = useState(false);
 
   const connectToArduino = async () => {
     try {
@@ -42,21 +43,60 @@ const SerialConnection = () => {
     }
   };
 
-  const sendColorData = async () => {
-    if (port && port.writable) {
-      const writer = port.writable.getWriter();
-      const colorData = new Uint8Array([red, green, blue]);
-      await writer.write(colorData);
-      writer.releaseLock();
+  // Function to read data from Arduino
+  const readJoystickData = async () => {
+    if (port && port.readable) {
+      const reader = port.readable.getReader();
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          // Convert the value (a Uint8Array) to a string
+          const data = new TextDecoder().decode(value);
+          const [x, y] = data.split(',').map(Number);
+
+          // Update joystick state
+          setJoystickX(x);
+          setJoystickY(y);
+
+          // Check the joystick direction and play corresponding sound
+          if (x > 180 && y < 75) {
+            // Joystick moved up
+            playSound("up");
+          } else if (x > 180 && y > 180) {
+            // Joystick moved down
+            playSound("down");
+          } else if (x < 75 && y > 180) {
+            // Joystick moved left
+            playSound("left");
+          } else if (x > 180 && y < 75) {
+            // Joystick moved right
+            playSound("right");
+          }
+        }
+      } catch (err) {
+        console.error('Error reading joystick data:', err);
+      } finally {
+        reader.releaseLock();
+      }
     }
   };
 
-  // Use useEffect to send color data immediately when red, green, or blue values change
+  // Set up the joystick data reading on connect
   useEffect(() => {
     if (isConnected) {
-      sendColorData();
+      readJoystickData();
     }
-  }, [red, green, blue, isConnected]);
+  }, [isConnected]);
+
+  // Handle button press to trigger sound
+  const handleButtonPress = () => {
+    playSound("button");  // Play sound for button press
+  };
 
   return (
     <>
@@ -67,35 +107,26 @@ const SerialConnection = () => {
       {isConnected && (
         <div>
           <button onClick={disconnectFromArduino}>Desconéctate</button>
+
+          {/* Joystick X and Y display */}
           <div>
-            <label>Red: </label>
-            <input
-              type="range"
-              min="0"
-              max="255"
-              value={red}
-              onChange={(e) => setRed(parseInt(e.target.value))}
-            />
+            <label>Joystick X: </label>
+            {joystickX}
           </div>
           <div>
-            <label>Green: </label>
-            <input
-              type="range"
-              min="0"
-              max="255"
-              value={green}
-              onChange={(e) => setGreen(parseInt(e.target.value))}
-            />
+            <label>Joystick Y: </label>
+            {joystickY}
           </div>
+
+          {/* Button press */}
           <div>
-            <label>Blue: </label>
-            <input
-              type="range"
-              min="0"
-              max="255"
-              value={blue}
-              onChange={(e) => setBlue(parseInt(e.target.value))}
-            />
+            <label>Button Press: </label>
+            <button onClick={() => {
+              setButtonPressed(!buttonPressed);
+              handleButtonPress();  // Trigger sound on button press
+            }}>
+              {buttonPressed ? 'Button Pressed' : 'Press Button'}
+            </button>
           </div>
         </div>
       )}

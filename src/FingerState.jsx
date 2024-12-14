@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { playCalmSound } from "./sound";
+import { playSound } from "./sound";
 
 const FingerState = ({ fingersState }) => {
   const timeout = useRef(null);
@@ -10,7 +10,7 @@ const FingerState = ({ fingersState }) => {
     timeout.current = setTimeout(() => {
       Object.keys(fingersState).forEach((finger) => {
         if (fingersState[finger]) {
-          playCalmSound(finger);
+          playSound(finger);
         }
       });
     }, 150);
