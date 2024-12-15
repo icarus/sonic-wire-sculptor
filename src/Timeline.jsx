@@ -3,13 +3,12 @@ import { playSound } from "./sound";
 import WaveformVisualizer from "./WaveformVisualizer";
 import { Button } from "./components/ui/button";
 import { presetPatterns, soundPresets } from './presets';
-import { initializeAudio, setBPM, setCurrentPreset } from './sound';
+import { initializeAudio, setBPM, setCurrentPreset, setMuted } from './sound';
 import * as Tone from 'tone';
 
-export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, showSlides }) {
+export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, showSlides, isMuted }) {
   const [loopGrid, setLoopGrid] = useState(() => {
-    // Start with the Basic Beat pattern by default
-    return presetPatterns["Industrial"].pattern.map(row => [...row]);
+    return presetPatterns["Basic Beat"].pattern.map(row => [...row]);
   });
   const [activeColumn, setActiveColumn] = useState(0);
   const [lastFingerActivation, setLastFingerActivation] = useState({});
@@ -25,7 +24,7 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
       try {
         await initializeAudio();
         // Set Drums preset as default
-        setCurrentPreset("House");
+        setCurrentPreset("Synth");
         console.log('Audio initialized successfully');
 
         // Stop previous sequence if it exists
@@ -37,14 +36,16 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
         // Create a sequence that repeats
         sequence = new Tone.Sequence(
           (time, col) => {
-            const fingerNames = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+            if (!isMuted) {
+              const fingerNames = ['thumb', 'index', 'middle', 'ring', 'pinky'];
 
-            // Play sounds for active cells in this column
-            loopGrid.forEach((row, rowIndex) => {
-              if (row[col]) {
-                playSound(fingerNames[rowIndex]);
-              }
-            });
+              // Play sounds for active cells in this column
+              loopGrid.forEach((row, rowIndex) => {
+                if (row[col]) {
+                  playSound(fingerNames[rowIndex]);
+                }
+              });
+            }
           },
           [...Array(steps).keys()],
           "8n"
@@ -71,7 +72,7 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
         sequenceRef.current.dispose();
       }
     };
-  }, [steps, loopGrid, autoPlay]);
+  }, [steps, loopGrid, autoPlay, isMuted]);
 
   // Reference existing effects from Timeline.jsx
   useEffect(() => {
@@ -135,6 +136,17 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
       }
     });
   }, [fingersState, activeColumn]);
+
+  // Add this effect to handle muting
+  useEffect(() => {
+    if (sequenceRef.current) {
+      if (isMuted) {
+        sequenceRef.current.mute = true;
+      } else {
+        sequenceRef.current.mute = false;
+      }
+    }
+  }, [isMuted]);
 
   const clearGrid = () => {
     const emptyGrid = Array(5).fill().map(() => Array(steps).fill(false));

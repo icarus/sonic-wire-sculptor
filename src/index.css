@@ -56,3 +56,12 @@ input, select {
 input, select {
   @apply uppercase placeholder:uppercase flex items-center border border-white;
 }
+
+.slide-container.ending {
+  opacity: 0;
+  transform: scale(1.05);
+}
+
+.slide-container {
+  transition: all 1000ms ease-in-out;
+}

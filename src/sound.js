@@ -5,6 +5,7 @@ let synths = {};
 let effects = {};
 let isInitialized = false;
 let currentPreset = "Drums";
+let isMuted = false;
 
 // Initialize effects with minimal decay
 effects.reverb = new Tone.Reverb({ decay: 0.5, wet: 0.2 }).toDestination();
@@ -251,6 +252,7 @@ export const initializeAudio = async () => {
     synths[finger] = createSynth(config.type);
   });
 
+  Tone.Destination.mute = isMuted;
   Tone.Transport.start();
   isInitialized = true;
 };
@@ -270,9 +272,8 @@ export const setCurrentPreset = (presetName) => {
   });
 };
 
-export const playSound = (finger) => {
-  if (!isInitialized) {
-    console.warn('Audio not initialized yet');
+export const playSound = (finger, ignoreMute = false) => {
+  if (!isInitialized || (isMuted && !ignoreMute)) {
     return;
   }
 
@@ -299,3 +300,10 @@ export const playSound = (finger) => {
 export const setBPM = (bpm) => {
   Tone.Transport.bpm.value = bpm;
 };
+
+export const setMuted = (muted) => {
+  isMuted = muted;
+  Tone.Destination.mute = muted;
+};
+
+export const getMuted = () => isMuted;

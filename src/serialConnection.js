@@ -99,9 +99,9 @@ const SerialConnection = () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col gap-4">
       <h3>Conexión con Arduino</h3>
-      <Button onClick={connectToArduino} disabled={isConnected}>
+      <Button variant="outline" className="hover:bg-white/10" onClick={connectToArduino} disabled={isConnected}>
         {isConnected ? 'Conectado' : 'Conectarse'}
       </Button>
       {isConnected && (
@@ -131,7 +131,7 @@ const SerialConnection = () => {
         </div>
       )}
       {error && <p style={{ color: 'red' }}>{error}</p>}
-    </>
+    </div>
   );
 };
 
