@@ -22,7 +22,7 @@ export const TextGenerateEffect = ({ words, className }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={cn("", className)}
+      className={className}
     >
       <div className="relative">
         <div className="absolute -inset-0.5 bg-gradient-to-r blur opacity-10" />
