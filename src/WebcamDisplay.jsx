@@ -7,7 +7,6 @@ const WebcamDisplay = ({ videoConstraints, webcamRef, canvasRef }) => {
     height: window.innerHeight,
   });
 
-  // Update video dimensions on window resize
   useEffect(() => {
     const handleResize = () => {
       setVideoDimensions({

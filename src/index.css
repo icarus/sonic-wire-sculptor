@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+
 @font-face {
   font-family: 'VCR OSD MONO';
   src: local('VCROSD'), url('../public/fonts/VCR_OSD_MONO_1.001.ttf') format('truetype');
@@ -27,21 +29,6 @@ canvas {
 	height: 480;
 }
 
-@keyframes line-move {
-  from {
-    left: 0%;
-  }
-  to {
-    left: 100%;
-  }
-}
-
-.animate-line {
-  animation-name: line-move;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
 @layer utilities {
   @keyframes spin-slow {
     from {
@@ -59,4 +46,13 @@ canvas {
   .rotate {
     transform: rotate3d(1, 0, 0, 85deg);
   }
+}
+
+input, select {
+  @apply uppercase placeholder:uppercase flex items-center border border-white;
+}
+
+
+input, select {
+  @apply uppercase placeholder:uppercase flex items-center border border-white;
 }

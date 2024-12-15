@@ -1,106 +1,131 @@
 import { useEffect, useRef } from "react";
 import * as handpose from "@tensorflow-models/handpose";
 import { drawHand } from "./lib/fingers";
+import { initializeAudio } from "./sound";
 
-const HandposeDetection = ({ webcamRef, canvasRef, setFingersState, playSound }) => {
+const HandposeDetection = ({ webcamRef, canvasRef, setFingersState }) => {
   const prevFingersState = useRef({
-    leftHand: {
-      thumb: false,
-      index: false,
-      middle: false,
-      ring: false,
-      pinky: false,
-    },
-    rightHand: {
-      thumb: false,
-      index: false,
-      middle: false,
-      ring: false,
-      pinky: false,
-    }
+    thumb: false,
+    index: false,
+    middle: false,
+    ring: false,
+    pinky: false,
   });
 
-  const FINGER_THRESHOLD = 30;
+  const calculateAngle = (point1, point2, point3) => {
+    const vector1 = [point1[0] - point2[0], point1[1] - point2[1]];
+    const vector2 = [point3[0] - point2[0], point3[1] - point2[1]];
 
-  const isFingerOpen = (joint1, joint2) => {
-    const distance = Math.sqrt(
-      Math.pow(joint1[0] - joint2[0], 2) + Math.pow(joint1[1] - joint2[1], 2)
+    const dot = vector1[0] * vector2[0] + vector1[1] * vector2[1];
+    const mag1 = Math.sqrt(vector1[0] ** 2 + vector1[1] ** 2);
+    const mag2 = Math.sqrt(vector2[0] ** 2 + vector2[1] ** 2);
+
+    const angle = Math.acos(dot / (mag1 * mag2));
+    return angle * (180 / Math.PI);
+  };
+
+  const isFingerOpen = (tipIndex, pipIndex, mcpIndex, landmarks) => {
+    const angle = calculateAngle(
+      landmarks[tipIndex],
+      landmarks[pipIndex],
+      landmarks[mcpIndex]
     );
-    return distance > FINGER_THRESHOLD;
+    return angle > 160; // Finger is considered open if angle is greater than 160 degrees
+  };
+
+  const isThumbOpen = (landmarks) => {
+    const angle = calculateAngle(
+      landmarks[4], // THUMB_TIP
+      landmarks[3], // THUMB_IP
+      landmarks[2]  // THUMB_MCP
+    );
+    return angle > 150; // Thumb has different threshold
   };
 
   const areStatesEqual = (state1, state2) => {
     return JSON.stringify(state1) === JSON.stringify(state2);
   };
 
-  const updateFingersState = (hands) => {
-    const newState = {
-      leftHand: { ...prevFingersState.current.leftHand },
-      rightHand: { ...prevFingersState.current.rightHand }
+  const getOpenFingers = (landmarks) => {
+    const fingerState = {
+      thumb: isThumbOpen(landmarks),
+      index: isFingerOpen(8, 6, 5, landmarks),    // INDEX_TIP, PIP, MCP
+      middle: isFingerOpen(12, 10, 9, landmarks), // MIDDLE_TIP, PIP, MCP
+      ring: isFingerOpen(16, 14, 13, landmarks),  // RING_TIP, PIP, MCP
+      pinky: isFingerOpen(20, 18, 17, landmarks), // PINKY_TIP, PIP, MCP
     };
 
-    hands.forEach(hand => {
+    return fingerState;
+  };
+
+  const updateFingersState = (hands) => {
+    const newState = {
+      thumb: false,
+      index: false,
+      middle: false,
+      ring: false,
+      pinky: false,
+    };
+
+    if (hands.length > 0) {
+      // Only process the first detected hand
+      const hand = hands[0];
       const landmarks = hand.landmarks;
-      // Determine if it's the right or left hand based on thumb position
-      const isRightHand = landmarks[4][0] > landmarks[0][0];
-      const handKey = isRightHand ? 'rightHand' : 'leftHand';
 
-      const fingerState = {
-        thumb: isFingerOpen(landmarks[4], landmarks[3]),
-        index: isFingerOpen(landmarks[8], landmarks[7]),
-        middle: isFingerOpen(landmarks[12], landmarks[11]),
-        ring: isFingerOpen(landmarks[16], landmarks[15]),
-        pinky: isFingerOpen(landmarks[20], landmarks[19])
-      };
+      // Get the state of all fingers
+      const fingerState = getOpenFingers(landmarks);
+      Object.assign(newState, fingerState);
 
-      // Update the state for the detected hand
-      newState[handKey] = fingerState;
-
-      // Play sounds for newly opened fingers
-      Object.entries(fingerState).forEach(([finger, isOpen]) => {
-        if (isOpen && !prevFingersState.current[handKey][finger]) {
-          // Construct the full finger identifier (e.g., "leftHand_thumb")
-          const fingerIdentifier = `${handKey}_${finger}`;
-          playSound(fingerIdentifier);
-        }
-      });
-    });
-
-    // Update state only if there's a change
-    if (!areStatesEqual(newState, prevFingersState.current)) {
-      setFingersState(newState);
-      prevFingersState.current = newState;
+      // Only update state if there's a change
+      if (!areStatesEqual(newState, prevFingersState.current)) {
+        setFingersState(newState);
+        prevFingersState.current = newState;
+      }
+    } else {
+      // Reset state when no hands are detected
+      if (!areStatesEqual(newState, prevFingersState.current)) {
+        setFingersState(newState);
+        prevFingersState.current = newState;
+      }
     }
   };
 
   useEffect(() => {
     const runHandpose = async () => {
-      const net = await handpose.load();
-      console.log("Handpose model loaded.");
+      try {
+        const net = await handpose.load();
+        console.log("Handpose model loaded.");
 
-      const detect = async () => {
-        if (
-          webcamRef.current &&
-          webcamRef.current.video &&
-          webcamRef.current.video.readyState === 4
-        ) {
-          const video = webcamRef.current.video;
-          const hands = await net.estimateHands(video);
+        await initializeAudio();
+        console.log("Audio initialized.");
 
-          if (canvasRef.current) {
-            const ctx = canvasRef.current.getContext("2d");
-            drawHand(hands, ctx);
+        const detect = async () => {
+          if (
+            webcamRef.current &&
+            webcamRef.current.video &&
+            webcamRef.current.video.readyState === 4
+          ) {
+            const video = webcamRef.current.video;
+            const hands = await net.estimateHands(video);
+
+            if (canvasRef.current) {
+              const ctx = canvasRef.current.getContext("2d");
+              ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+              drawHand(hands, ctx);
+            }
+
+            updateFingersState(hands);
           }
+        };
 
-          updateFingersState(hands);
-        }
-      };
-
-      setInterval(detect, 100);
+        setInterval(detect, 100);
+      } catch (error) {
+        console.error("Error in handpose detection:", error);
+      }
     };
 
     runHandpose();
-  }, []);
+  }, [canvasRef, updateFingersState, webcamRef]);
 
   return null;
 };
