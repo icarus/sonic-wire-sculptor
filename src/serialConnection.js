@@ -1,136 +1,101 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from './components/ui/button';
-import { playSound } from './sound'; // Import the playSound function
+import React, { useState, useEffect, useCallback } from "react";
+import { Button } from "./components/ui/button";
 
 const SerialConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState(null);
   const [port, setPort] = useState(null);
+  const [error, setError] = useState(null);
   const [joystickX, setJoystickX] = useState(0);
   const [joystickY, setJoystickY] = useState(0);
-  const [buttonPressed, setButtonPressed] = useState(false);
+  const [buttonState, setButtonState] = useState(1); // Default to "not pressed"
 
-  const connectToArduino = async () => {
+  const connectToSerial = async () => {
     try {
-      const port = await navigator.serial.requestPort();
-      if (!port) {
-        console.error("No serial port selected.");
-        return;
-      }
-
-      console.log("Selected port:", port);
-
-      await port.open({ baudRate: 9600 });
-      setPort(port);
-
+      const selectedPort = await navigator.serial.requestPort();
+      await selectedPort.open({ baudRate: 9600 });
+      setPort(selectedPort);
       setIsConnected(true);
-      console.log('Connected to Arduino!');
+      console.log("Connected to Arduino!");
     } catch (err) {
-      setError('Failed to connect to Arduino: ' + err.message);
-      console.error('Error connecting to Arduino:', err);
+      console.error("Connection error:", err);
+      setError(`Failed to connect: ${err.message}`);
     }
   };
 
-  const disconnectFromArduino = async () => {
+  const disconnectFromSerial = async () => {
     try {
-      if (port && port.close) {
+      if (port) {
         await port.close();
+        setPort(null);
         setIsConnected(false);
-        console.log('Disconnected from Arduino!');
+        console.log("Disconnected from Arduino!");
       }
     } catch (err) {
-      console.error('Error disconnecting from Arduino:', err);
+      console.error("Disconnection error:", err);
+      setError(`Failed to disconnect: ${err.message}`);
     }
   };
 
-  // Function to read data from Arduino
-  const readJoystickData = async () => {
-    if (port && port.readable) {
-      const reader = port.readable.getReader();
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
+  const readSerialData = useCallback(async () => {
+    if (!port || !port.readable) {
+      console.error("Port not readable");
+      return;
+    }
 
-          if (done) {
-            break;
-          }
+    const reader = port.readable.getReader();
+    const decoder = new TextDecoder();
 
-          // Convert the value (a Uint8Array) to a string
-          const data = new TextDecoder().decode(value);
-          const [x, y] = data.split(',').map(Number);
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-          // Update joystick state
+        const text = decoder.decode(value).trim();
+        console.log("Raw data:", text);
+
+        // Extract values from the serial data string
+        const values = text.split(',');
+        if (values.length === 3) {
+          const [x, y, button] = values.map(Number);
+          console.log("Parsed values:", { x, y, button });
           setJoystickX(x);
           setJoystickY(y);
-
-          // Check the joystick direction and play corresponding sound
-          if (x > 180 && y < 75) {
-            // Joystick moved up
-            playSound("up");
-          } else if (x > 180 && y > 180) {
-            // Joystick moved down
-            playSound("down");
-          } else if (x < 75 && y > 180) {
-            // Joystick moved left
-            playSound("left");
-          } else if (x > 180 && y < 75) {
-            // Joystick moved right
-            playSound("right");
-          }
+          setButtonState(button);
         }
-      } catch (err) {
-        console.error('Error reading joystick data:', err);
-      } finally {
-        reader.releaseLock();
       }
+    } catch (err) {
+      console.error("Error reading from serial port:", err);
+    } finally {
+      reader.releaseLock();
     }
-  };
+  }, [port]);
 
-  // Set up the joystick data reading on connect
   useEffect(() => {
     if (isConnected) {
-      readJoystickData();
+      readSerialData();
     }
-  }, [isConnected]);
-
-  // Handle button press to trigger sound
-  const handleButtonPress = () => {
-    playSound("button");  // Play sound for button press
-  };
+  }, [isConnected, readSerialData]);
 
   return (
     <div className="flex flex-col gap-4">
-      <h3>Conexión con Arduino</h3>
-      <Button variant="outline" className="hover:bg-white/10" onClick={connectToArduino} disabled={isConnected}>
-        {isConnected ? 'Conectado' : 'Conectarse'}
+      <h3>Arduino Joystick Controller</h3>
+      <Button
+        variant="outline"
+        className="hover:bg-white/10"
+        onClick={isConnected ? disconnectFromSerial : connectToSerial}
+      >
+        {isConnected ? "Disconnect" : "Connect"}
       </Button>
+
       {isConnected && (
-        <div>
-          <button onClick={disconnectFromArduino}>Desconéctate</button>
-
-          {/* Joystick X and Y display */}
-          <div>
-            <label>Joystick X: </label>
-            {joystickX}
-          </div>
-          <div>
-            <label>Joystick Y: </label>
-            {joystickY}
-          </div>
-
-          {/* Button press */}
-          <div>
-            <label>Button Press: </label>
-            <button onClick={() => {
-              setButtonPressed(!buttonPressed);
-              handleButtonPress();  // Trigger sound on button press
-            }}>
-              {buttonPressed ? 'Button Pressed' : 'Press Button'}
-            </button>
-          </div>
+        <div className="flex flex-col gap-2 text-sm text-white">
+          <div>Joystick X: {joystickX}</div>
+          <div>Joystick Y: {joystickY}</div>
+          <div>Button State: {buttonState === 0 ? "Pressed" : "Released"}</div>
         </div>
       )}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {error && <p className="text-red-500">{error}</p>}
     </div>
   );
 };

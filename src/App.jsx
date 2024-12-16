@@ -7,7 +7,7 @@ import Slide from "./Slide";
 import CameraControls from "./CameraControls";
 import { SparklesCore } from "./components/ui/sparkles";
 import { cn } from "./lib/utils";
-
+import SerialConnection from "./serialConnection";
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -26,7 +26,7 @@ function App() {
   const [steps,] = useState(8);
   const [isMuted, setIsMuted] = useState(false);
 
-  const TOTAL_SLIDES = 8;
+  const TOTAL_SLIDES = 9;
 
   useEffect(() => {
     const getDevices = async () => {
@@ -102,26 +102,29 @@ function App() {
           showSlides ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"
         )}
       >
-        <div className="flex w-full h-full relative">
-          <WebcamDisplay
-            webcamRef={webcamRef}
-            canvasRef={canvasRef}
-            videoConstraints={{
-              deviceId: devices[cameraIndex]?.deviceId
-            }}
-          />
-          <HandposeDetection
-            webcamRef={webcamRef}
-            canvasRef={canvasRef}
-            setFingersState={setFingersState}
-          />
-          <CameraControls
-            devices={devices}
-            cameraIndex={cameraIndex}
-            setCameraIndex={setCameraIndex}
-          />
-        </div>
+        {!showSlides && (
+          <div className="hidden w-full h-full relative">
+            <WebcamDisplay
+              webcamRef={webcamRef}
+              canvasRef={canvasRef}
+              videoConstraints={{
+                deviceId: devices[cameraIndex]?.deviceId
+              }}
+            />
+            <HandposeDetection
+              webcamRef={webcamRef}
+              canvasRef={canvasRef}
+              setFingersState={setFingersState}
+            />
+            <CameraControls
+              devices={devices}
+              cameraIndex={cameraIndex}
+              setCameraIndex={setCameraIndex}
+            />
+          </div>
+        )}
       </div>
+      <SerialConnection />
 
       {showSlides && (
         <div

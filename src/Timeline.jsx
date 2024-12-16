@@ -8,14 +8,10 @@ import * as Tone from 'tone';
 import { cn } from "./lib/utils";
 
 export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, showSlides, isMuted }) {
-  const defaultPattern = "Rave";
-  const defaultSound = presetPatterns[defaultPattern].soundPreset;
-
   const [loopGrid, setLoopGrid] = useState(() => {
-    return presetPatterns[defaultPattern].pattern.map(row => [...row]);
+    return presetPatterns["Rave"].pattern.map(row => [...row]);
   });
-  const [currentPreset, setCurrentPresetState] = useState(defaultSound);
-  const [activePattern, setActivePattern] = useState(defaultPattern);
+  const [currentPreset, setCurrentPresetState] = useState("Industrial");
   const [activeColumn, setActiveColumn] = useState(0);
   const [lastFingerActivation, setLastFingerActivation] = useState({});
   const [progress, setProgress] = useState(0);
@@ -29,10 +25,11 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
     const setupAudio = async () => {
       try {
         await initializeAudio();
-        // Set initial sound preset
-        setCurrentPreset(defaultSound);
+        // Set Drums preset as default
+        setCurrentPreset("Industrial");
         console.log('Audio initialized successfully');
 
+        // Stop previous sequence if it exists
         if (sequenceRef.current) {
           sequenceRef.current.stop();
           sequenceRef.current.dispose();
@@ -156,7 +153,6 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
   const clearGrid = () => {
     const emptyGrid = Array(5).fill().map(() => Array(steps).fill(false));
     setLoopGrid(emptyGrid);
-    setActivePattern(null);
   };
 
   const handlePresetChange = (preset) => {
@@ -169,7 +165,6 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
     if (!preset) return;
 
     setLoopGrid(preset.pattern.map(row => [...row]));
-    setActivePattern(presetName);
 
     // Only update BPM if it's different to avoid unnecessary rerenders
     if (preset.recommendedBPM !== bpm) {
@@ -226,7 +221,7 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
                 variant="secondary"
                 className={cn(
                   "px-3 py-1.5 bg-neutral-800 text-white rounded-md text-sm hover:bg-neutral-700",
-                  activePattern === presetName ? "!bg-white !text-black" : ""
+                  presetPatterns[presetName].soundPreset === currentPreset ? "!bg-white !text-black" : ""
                 )}
               >
                 {presetName}

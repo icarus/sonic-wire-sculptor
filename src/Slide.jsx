@@ -487,7 +487,7 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
             <div className="relative flex items-center justify-center w-full h-full">
               <Globe className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] z-0" />
               <div className="relative z-10 flex gap-4 items-center justify-center w-full">
-                <div className="backdrop-blur-lg bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
+                <div className="backdrop-blur- bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
                   <p className="text-base uppercase tracking-widest font-['VCR_OSD_MONO'] mb-8">Alcance</p>
                   <ul className="text-lg leading-loose list-none space-y-4">
                     {[
@@ -504,7 +504,7 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
                     ))}
                   </ul>
                 </div>
-                <div className="backdrop-blur-lg bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
+                <div className="backdrop-blur- bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
                   <p className="text-base uppercase tracking-widest font-['VCR_OSD_MONO'] mb-8">Impacto Social</p>
                   <ul className="text-lg leading-loose list-none space-y-4">
                     {[
