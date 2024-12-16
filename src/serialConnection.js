@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "./components/ui/button";
 
-const SerialConnection = () => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [port, setPort] = useState(null);
+const SerialConnection = ({
+  isConnected,
+  setIsConnected,
+  port,
+  setPort,
+  joystickX,
+  setJoystickX,
+  joystickY,
+  setJoystickY,
+  buttonState,
+  setButtonState
+}) => {
   const [error, setError] = useState(null);
-  const [joystickX, setJoystickX] = useState(0);
-  const [joystickY, setJoystickY] = useState(0);
-  const [buttonState, setButtonState] = useState(1); // Default to "not pressed"
+  const readerRef = useRef(null);
+  const keepReadingRef = useRef(true);
 
   const connectToSerial = async () => {
     try {
@@ -24,6 +32,10 @@ const SerialConnection = () => {
 
   const disconnectFromSerial = async () => {
     try {
+      keepReadingRef.current = false;
+      if (readerRef.current) {
+        await readerRef.current.cancel();
+      }
       if (port) {
         await port.close();
         setPort(null);
@@ -42,39 +54,56 @@ const SerialConnection = () => {
       return;
     }
 
-    const reader = port.readable.getReader();
-    const decoder = new TextDecoder();
+    keepReadingRef.current = true;
 
     try {
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+      while (keepReadingRef.current && port.readable) {
+        const reader = port.readable.getReader();
+        readerRef.current = reader;
 
-        const text = decoder.decode(value).trim();
-        console.log("Raw data:", text);
+        try {
+          while (keepReadingRef.current) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-        // Extract values from the serial data string
-        const values = text.split(',');
-        if (values.length === 3) {
-          const [x, y, button] = values.map(Number);
-          console.log("Parsed values:", { x, y, button });
-          setJoystickX(x);
-          setJoystickY(y);
-          setButtonState(button);
+            const text = new TextDecoder().decode(value).trim();
+
+            const values = text.split(',');
+            if (values.length === 3) {
+              const [x, y, button] = values.map(Number);
+              setJoystickX(x);
+              setJoystickY(y);
+              setButtonState(button);
+            }
+          }
+        } catch (error) {
+          console.error("Error reading data:", error);
+        } finally {
+          reader.releaseLock();
         }
       }
-    } catch (err) {
-      console.error("Error reading from serial port:", err);
-    } finally {
-      reader.releaseLock();
+    } catch (error) {
+      console.error("Error setting up reader:", error);
     }
-  }, [port]);
+  }, [port, setJoystickX, setJoystickY, setButtonState]);
 
   useEffect(() => {
     if (isConnected) {
       readSerialData();
     }
+    return () => {
+      keepReadingRef.current = false;
+      if (readerRef.current) {
+        readerRef.current.cancel();
+      }
+    };
   }, [isConnected, readSerialData]);
+
+  useEffect(() => {
+    return () => {
+      disconnectFromSerial();
+    };
+  }, []);
 
   return (
     <div className="flex flex-col gap-4">

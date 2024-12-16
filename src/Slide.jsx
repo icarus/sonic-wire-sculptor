@@ -142,7 +142,24 @@ const images = [
   "/pype3.gif",
 ];
 
-export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted, isMuted }) {
+export default function Slide({
+  slideNumber,
+  onNext,
+  onPrev,
+  isFirst,
+  setIsMuted,
+  isMuted,
+  isConnected,
+  setIsConnected,
+  port,
+  setPort,
+  joystickX,
+  setJoystickX,
+  joystickY,
+  setJoystickY,
+  buttonState,
+  setButtonState
+}) {
   const confettiRef = useRef(null);
   const [webcamRef, setWebcamRef] = useState(null);
   const [model, setModel] = useState(null);
@@ -534,7 +551,18 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
               <BlurFade className="text-center text-6xl font-light mb-16 h-12">
                 Empecemos!
               </BlurFade>
-              <SerialConnection />
+              <SerialConnection
+                isConnected={isConnected}
+                setIsConnected={setIsConnected}
+                port={port}
+                setPort={setPort}
+                joystickX={joystickX}
+                setJoystickX={setJoystickX}
+                joystickY={joystickY}
+                setJoystickY={setJoystickY}
+                buttonState={buttonState}
+                setButtonState={setButtonState}
+              />
             </div>
             <Confetti
               ref={confettiRef}

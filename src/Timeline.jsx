@@ -7,11 +7,56 @@ import { initializeAudio, setBPM, setCurrentPreset } from './sound';
 import * as Tone from 'tone';
 import { cn } from "./lib/utils";
 
-export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, showSlides, isMuted }) {
+export default function Timeline({
+  fingersState,
+  steps,
+  bpm,
+  setBpm,
+  joystickX,
+  joystickY,
+  buttonState,
+  autoPlay,
+  showSlides,
+  isMuted
+}) {
+  const [currentPreset, setCurrentPresetState] = useState("Industrial");
+
+  const loadPreset = (presetName) => {
+    setCurrentPresetState(presetName);
+    setLoopGrid(presetPatterns[presetName].pattern.map(row => [...row]));
+  };
+
+  useEffect(() => {
+    const joystickThreshold = 20; // Threshold for joystick X-axis to avoid drifting
+    const timeoutId = setTimeout(() => {
+      if (buttonState === 0) {
+        if (Math.abs(joystickX - 512) > joystickThreshold) {
+          if (joystickX > 512) {
+            setBpm(prev => Math.min(200, prev + 1));
+          } else if (joystickX < 512) {
+            setBpm(prev => Math.max(60, prev - 1));
+          }
+        }
+      } else {
+        const presetNames = Object.keys(presetPatterns);
+        const currentIndex = presetNames.indexOf(currentPreset);
+
+        if (Math.abs(joystickX - 512) > joystickThreshold) {
+          if (joystickX > 512 && currentIndex < presetNames.length - 1) {
+            loadPreset(presetNames[currentIndex + 1]);
+          } else if (joystickX < 512 && currentIndex > 0) {
+            loadPreset(presetNames[currentIndex - 1]);
+          }
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [joystickX, buttonState, setBpm, currentPreset]);
+
   const [loopGrid, setLoopGrid] = useState(() => {
     return presetPatterns["Rave"].pattern.map(row => [...row]);
   });
-  const [currentPreset, setCurrentPresetState] = useState("Industrial");
   const [activeColumn, setActiveColumn] = useState(0);
   const [lastFingerActivation, setLastFingerActivation] = useState({});
   const [progress, setProgress] = useState(0);
@@ -158,24 +203,6 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
   const handlePresetChange = (preset) => {
     setCurrentPresetState(preset);
     setCurrentPreset(preset); // This calls the audio function
-  };
-
-  const loadPreset = (presetName) => {
-    const preset = presetPatterns[presetName];
-    if (!preset) return;
-
-    setLoopGrid(preset.pattern.map(row => [...row]));
-
-    // Only update BPM if it's different to avoid unnecessary rerenders
-    if (preset.recommendedBPM !== bpm) {
-      setBpm(preset.recommendedBPM);
-      setBPM(preset.recommendedBPM); // Update Tone.js BPM
-    }
-
-    // Set the corresponding sound preset if specified
-    if (preset.soundPreset) {
-      handlePresetChange(preset.soundPreset);
-    }
   };
 
   return (

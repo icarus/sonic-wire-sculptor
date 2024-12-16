@@ -8,6 +8,7 @@ import CameraControls from "./CameraControls";
 import { SparklesCore } from "./components/ui/sparkles";
 import { cn } from "./lib/utils";
 import SerialConnection from "./serialConnection";
+
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -25,6 +26,11 @@ function App() {
   const [bpm, setBpm] = useState(120);
   const [steps,] = useState(8);
   const [isMuted, setIsMuted] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [port, setPort] = useState(null);
+  const [joystickX, setJoystickX] = useState(0);
+  const [joystickY, setJoystickY] = useState(0);
+  const [buttonState, setButtonState] = useState(1);
 
   const TOTAL_SLIDES = 9;
 
@@ -81,12 +87,27 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (joystickX > 512) {
+        setBpm(prev => Math.min(200, prev + 1));
+      } else if (joystickX < 512) {
+        setBpm(prev => Math.max(60, prev - 1));
+      }
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [joystickX]);
+
   return (
     <div className="flex flex-col max-w-full h-svh bg-neutral-900">
       <div className="flex-grow">
         <Timeline
           fingersState={fingersState}
           steps={steps}
+          joystickX={joystickX}
+          joystickY={joystickY}
+          buttonState={buttonState}
           setBpm={setBpm}
           bpm={bpm}
           autoPlay={true}
@@ -124,7 +145,22 @@ function App() {
           </div>
         )}
       </div>
-      <SerialConnection />
+      <div className={cn(
+        "fixed bottom-4 right-4 z-50 opacity-0",
+      )}>
+        <SerialConnection
+          isConnected={isConnected}
+          setIsConnected={setIsConnected}
+          port={port}
+          setPort={setPort}
+          joystickX={joystickX}
+          setJoystickX={setJoystickX}
+          joystickY={joystickY}
+          setJoystickY={setJoystickY}
+          buttonState={buttonState}
+          setButtonState={setButtonState}
+        />
+      </div>
 
       {showSlides && (
         <div
@@ -148,6 +184,16 @@ function App() {
               isFirst={currentSlide === 0}
               setIsMuted={setIsMuted}
               isMuted={isMuted}
+              isConnected={isConnected}
+              setIsConnected={setIsConnected}
+              port={port}
+              setPort={setPort}
+              joystickX={joystickX}
+              setJoystickX={setJoystickX}
+              joystickY={joystickY}
+              setJoystickY={setJoystickY}
+              buttonState={buttonState}
+              setButtonState={setButtonState}
             />
           </div>
           <div className="absolute inset-0 select-none pointer-events-none">
