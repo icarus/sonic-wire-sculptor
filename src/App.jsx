@@ -65,10 +65,15 @@ function App() {
         slideContainer.classList.add('ending');
         return;
       }
-      // Second click actually ends the presentation
       setShowSlides(false);
     }
   };
+
+  useEffect(() => {
+    if (currentSlide === TOTAL_SLIDES - 1) {
+      setShowSlides(false);
+    }
+  }, [currentSlide]);
 
   const handlePrev = () => {
     if (currentSlide > 0) {
@@ -150,7 +155,7 @@ function App() {
               maxSize={1.4}
               particleDensity={100}
               className={cn(
-                "w-full h-full z-50 mix-blend-exclusion opacity-25",
+                "w-full h-full z-50 mix-blend-exclusion opacity-0",
                 "transition-opacity duration-1000",
               )}
               particleColor="#FFFFFF"

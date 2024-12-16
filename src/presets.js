@@ -7,11 +7,11 @@ export const soundPresets = {
     pinky: { type: "deep_kick", note: "C0"}
   },
   "Industrial": {
-    thumb: { type: "trap_kick", note: "C1" },
-    index: { type: "trap_hihat", note: "A6" },
-    middle: { type: "trap_snare", note: null },
-    ring: { type: "trap_808", note: "F1" },
-    pinky: { type: "trap_perc", note: "D5" }
+    thumb: { type: "trap_kick", note: "G1" },
+    index: { type: "trap_hihat", note: "D6" },
+    middle: { type: "pad", note: "G4" },
+    ring: { type: "pluck", note: "B3" },
+    pinky: { type: "bass", note: "G2" }
   },
   "Synth": {
     thumb: { type: "bass", note: "C2" },
@@ -39,42 +39,46 @@ export const soundPresets = {
 export const presetPatterns = {
   "Basic Beat": {
     pattern: [
-      [true, false, false, false, true, false, false, false], // Kick
-      [false, false, true, false, false, false, true, false], // Hi-hat
-      [false, false, false, false, true, false, false, false], // Clap
-      [false, false, true, false, false, false, true, false], // Snare
-      [true, false, false, true, false, true, false, false]  // Deep Kick
+      [true, false, false, false, true, false, false, false],
+      [false, false, true, false, false, false, true, false],
+      [false, false, false, false, true, false, false, false],
+      [false, false, true, false, false, false, true, false],
+      [true, false, false, true, false, true, false, false]
     ],
-    recommendedBPM: 120
+    recommendedBPM: 120,
+    soundPreset: "Drums"
   },
-  "Industrial": {
+  "Rave": {
     pattern: [
-      [true, false, false, true, false, false, true, false],   // Kick
-      [true, true, true, true, true, true, true, true],        // Hi-hat
-      [false, false, false, false, true, false, false, false], // Clap
-      [false, false, false, false, true, false, false, false], // Snare
-      [true, false, false, false, false, false, false, false]  // Deep Kick
+      [true, false, false, true, false, false, true, false],
+      [true, true, true, true, true, true, true, true],
+      [false, false, false, false, true, false, false, false],
+      [false, false, false, false, true, false, false, false],
+      [true, false, false, false, false, false, false, false]
     ],
-    recommendedBPM: 140
+    recommendedBPM: 140,
+    soundPreset: "Industrial"
   },
   "House": {
     pattern: [
-      [true, false, false, false, true, false, false, false], // Kick
-      [false, true, false, true, false, true, false, true],   // Hi-hat
-      [false, false, false, false, true, false, false, false], // Clap
-      [false, false, true, false, false, false, true, false], // Snare
-      [true, false, true, false, true, false, true, false]    // Deep Kick
+      [true, false, false, false, true, false, false, false],
+      [false, true, false, true, false, true, false, true],
+      [false, false, false, false, true, false, false, false],
+      [false, false, true, false, false, false, true, false],
+      [true, false, true, false, true, false, true, false]
     ],
-    recommendedBPM: 128
+    recommendedBPM: 128,
+    soundPreset: "Synth"
   },
   "Breakbeat": {
     pattern: [
-      [true, false, true, false, true, false, true, false],   // Kick
-      [false, true, false, true, false, true, false, true],   // Hi-hat
-      [true, false, false, true, false, false, true, false],  // Clap
-      [false, true, false, false, true, false, false, true],  // Snare
-      [true, false, false, false, true, false, false, false]  // Deep Kick
+      [true, false, true, false, true, false, true, false],
+      [false, true, false, true, false, true, false, true],
+      [true, false, false, true, false, false, true, false],
+      [false, true, false, false, true, false, false, true],
+      [true, false, false, false, true, false, false, false]
     ],
-    recommendedBPM: 150
+    recommendedBPM: 150,
+    soundPreset: "Industrial"
   }
 };

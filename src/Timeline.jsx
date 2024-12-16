@@ -3,13 +3,19 @@ import { playSound } from "./sound";
 import WaveformVisualizer from "./WaveformVisualizer";
 import { Button } from "./components/ui/button";
 import { presetPatterns, soundPresets } from './presets';
-import { initializeAudio, setBPM, setCurrentPreset, setMuted } from './sound';
+import { initializeAudio, setBPM, setCurrentPreset } from './sound';
 import * as Tone from 'tone';
+import { cn } from "./lib/utils";
 
 export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, showSlides, isMuted }) {
+  const defaultPattern = "Rave";
+  const defaultSound = presetPatterns[defaultPattern].soundPreset;
+
   const [loopGrid, setLoopGrid] = useState(() => {
-    return presetPatterns["Basic Beat"].pattern.map(row => [...row]);
+    return presetPatterns[defaultPattern].pattern.map(row => [...row]);
   });
+  const [currentPreset, setCurrentPresetState] = useState(defaultSound);
+  const [activePattern, setActivePattern] = useState(defaultPattern);
   const [activeColumn, setActiveColumn] = useState(0);
   const [lastFingerActivation, setLastFingerActivation] = useState({});
   const [progress, setProgress] = useState(0);
@@ -23,11 +29,10 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
     const setupAudio = async () => {
       try {
         await initializeAudio();
-        // Set Drums preset as default
-        setCurrentPreset("Synth");
+        // Set initial sound preset
+        setCurrentPreset(defaultSound);
         console.log('Audio initialized successfully');
 
-        // Stop previous sequence if it exists
         if (sequenceRef.current) {
           sequenceRef.current.stop();
           sequenceRef.current.dispose();
@@ -151,25 +156,43 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
   const clearGrid = () => {
     const emptyGrid = Array(5).fill().map(() => Array(steps).fill(false));
     setLoopGrid(emptyGrid);
+    setActivePattern(null);
+  };
+
+  const handlePresetChange = (preset) => {
+    setCurrentPresetState(preset);
+    setCurrentPreset(preset); // This calls the audio function
   };
 
   const loadPreset = (presetName) => {
     const preset = presetPatterns[presetName];
+    if (!preset) return;
+
     setLoopGrid(preset.pattern.map(row => [...row]));
-    setBpm(preset.recommendedBPM);
+    setActivePattern(presetName);
+
+    // Only update BPM if it's different to avoid unnecessary rerenders
+    if (preset.recommendedBPM !== bpm) {
+      setBpm(preset.recommendedBPM);
+      setBPM(preset.recommendedBPM); // Update Tone.js BPM
+    }
+
+    // Set the corresponding sound preset if specified
+    if (preset.soundPreset) {
+      handlePresetChange(preset.soundPreset);
+    }
   };
 
   return (
     <div className="relative size-full flex flex-col overflow-clip bg-neutral-900/50 backdrop-blur-sm">
-      {/* Controls */}
       {!showSlides && (
         <div className="absolute top-4 right-4 z-10 flex gap-4 items-center">
           <div className="flex items-center gap-2">
             <label className="text-white">Sound:</label>
             <select
               className="bg-neutral-800 text-white rounded px-2 py-1"
-              onChange={(e) => setCurrentPreset(e.target.value)}
-              defaultValue="Drums"
+              value={currentPreset}
+              onChange={(e) => handlePresetChange(e.target.value)}
             >
               {Object.keys(soundPresets).map((preset) => (
                 <option key={preset} value={preset}>
@@ -185,30 +208,38 @@ export default function Timeline({ fingersState, steps, bpm, setBpm, autoPlay, s
               type="number"
               value={bpm}
               onChange={(e) => {
-                const newBPM = Math.min(200, Math.max(60, Number(e.target.value)));
+                const newBPM = Math.min(200, Math.max(60, Number(e.target.value) || 60));
                 setBPM(newBPM);
                 setBpm(newBPM);
               }}
               className="w-16 bg-neutral-800 text-white rounded px-2 py-1"
+              min="60"
+              max="200"
             />
           </div>
 
-          {Object.keys(presetPatterns).map((presetName) => (
-            <Button
-              key={presetName}
-              onClick={() => loadPreset(presetName)}
-              className="px-3 py-1.5 bg-neutral-800 text-white rounded-md text-sm hover:bg-neutral-700"
-            >
-              {presetName}
-            </Button>
-          ))}
+          <div className="flex gap-2">
+            {Object.keys(presetPatterns).map((presetName) => (
+              <Button
+                key={presetName}
+                onClick={() => loadPreset(presetName)}
+                variant="secondary"
+                className={cn(
+                  "px-3 py-1.5 bg-neutral-800 text-white rounded-md text-sm hover:bg-neutral-700",
+                  activePattern === presetName ? "!bg-white !text-black" : ""
+                )}
+              >
+                {presetName}
+              </Button>
+            ))}
+          </div>
 
           <Button
             onClick={clearGrid}
             className="px-3 py-1.5 !bg-white hover:opacity-80 text-black rounded-md text-sm"
           >
             Clear All
-            </Button>
+          </Button>
         </div>
       )}
 

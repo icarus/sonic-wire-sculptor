@@ -10,6 +10,7 @@ import * as Tone from 'tone';
 import * as handpose from '@tensorflow-models/handpose';
 import Webcam from 'react-webcam';
 import Globe from './components/ui/globe';
+import { drawHand } from './lib/fingers';
 
 const problems = [
   {
@@ -136,6 +137,8 @@ const images = [
   "/tae2.gif",
   "/pype2.png",
   "/tae1.gif",
+  "/tae4.jpeg",
+  "/tae5.jpeg",
   "/pype3.gif",
 ];
 
@@ -144,6 +147,7 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
   const [webcamRef, setWebcamRef] = useState(null);
   const [model, setModel] = useState(null);
   const [isHandVisible, setIsHandVisible] = useState(false);
+  const [canvasRef, setCanvasRef] = useState(null);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -172,12 +176,21 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
   const synth = useMemo(() => new Tone.Synth().toDestination(), []);
 
   const detect = useCallback(async () => {
-    if (model && webcamRef) {
+    if (model && webcamRef && canvasRef) {
       const video = webcamRef.video;
+      const canvas = canvasRef;
+      const ctx = canvas.getContext("2d");
+
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       const predictions = await model.estimateHands(video);
       setIsHandVisible(predictions.length > 0);
+
+      // Draw the detected hands
+      drawHand(predictions, ctx);
     }
-  }, [model, webcamRef]);
+  }, [model, webcamRef, canvasRef]);
 
   const playNote = useCallback((note) => {
     synth.triggerAttackRelease(note, "8n");
@@ -237,7 +250,7 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
                 <BlurFade delay={4.5} className="w-full flex-1 font-sans text-white/50 text-base">Especialmente en el primer año de enseñanza media.</BlurFade>
               </div>
               <div className="h-svh top-0 left-0 size-full absolute">
-                <AnimatedList initialDelay={5000}>
+                <AnimatedList initialDelay={6000}>
                   {problems.map((item, idx) => (
                     <Notification key={idx} {...item} />
                   ))}
@@ -290,6 +303,12 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
                           }, 100);
                           return () => clearInterval(interval);
                         }}
+                      />
+                      <canvas
+                        ref={setCanvasRef}
+                        className="absolute inset-0 size-full"
+                        width={640}
+                        height={480}
                       />
                       <div className="absolute top-4 right-4 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1">
                         <span className={`size-2 rounded-full ${isHandVisible ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -468,7 +487,7 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
             <div className="relative flex items-center justify-center w-full h-full">
               <Globe className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] z-0" />
               <div className="relative z-10 flex gap-4 items-center justify-center w-full">
-                <div className="backdrop-blur-sm bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
+                <div className="backdrop-blur-lg bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
                   <p className="text-base uppercase tracking-widest font-['VCR_OSD_MONO'] mb-8">Alcance</p>
                   <ul className="text-lg leading-loose list-none space-y-4">
                     {[
@@ -485,7 +504,7 @@ export default function Slide({ slideNumber, onNext, onPrev, isFirst, setIsMuted
                     ))}
                   </ul>
                 </div>
-                <div className="backdrop-blur-sm bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
+                <div className="backdrop-blur-lg bg-neutral-900/50 p-8 rounded-2xl border border-white/10">
                   <p className="text-base uppercase tracking-widest font-['VCR_OSD_MONO'] mb-8">Impacto Social</p>
                   <ul className="text-lg leading-loose list-none space-y-4">
                     {[
