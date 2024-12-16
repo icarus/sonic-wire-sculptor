@@ -144,6 +144,55 @@ export default function Timeline({
     });
   }, [fingersState, activeColumn]);
 
+  // Helper function to get the next preset based on joystick direction
+  const getNextPreset = (currentPreset, direction) => {
+    const presetNames = Object.keys(presetPatterns);
+    const currentIndex = presetNames.indexOf(currentPreset);
+
+    switch(direction) {
+      case 'right':
+        return presetNames[(currentIndex + 1) % presetNames.length];
+      case 'left':
+        return presetNames[(currentIndex - 1 + presetNames.length) % presetNames.length];
+      case 'up':
+        return presetNames[Math.min(currentIndex + 2, presetNames.length - 1)];
+      case 'down':
+        return presetNames[Math.max(currentIndex - 2, 0)];
+      default:
+        return currentPreset;
+    }
+  };
+
+  // Add this useEffect to handle joystick movements
+  useEffect(() => {
+    if (!joystickX && !joystickY) return;
+
+    // Define thresholds for joystick movement
+    const threshold = 720;
+
+    // Determine direction based on joystick position
+    let direction = null;
+    if (Math.abs(joystickX) > Math.abs(joystickY)) {
+      if (joystickX > threshold) direction = 'right';
+      else if (joystickX < -threshold) direction = 'left';
+    } else {
+      if (joystickY > threshold) direction = 'up';
+      else if (joystickY < -threshold) direction = 'down';
+    }
+
+    if (direction) {
+      const nextPreset = getNextPreset(currentPattern, direction);
+      loadPreset(nextPreset);
+    }
+  }, [joystickX, joystickY]);
+
+  // Add this useEffect to handle button press
+  useEffect(() => {
+    if (buttonState === 0) {
+      setLoopGrid(Array(5).fill().map(() => Array(steps).fill(false)));
+    }
+  }, [buttonState, steps]);
+
   return (
     <div className="relative size-full flex flex-col overflow-clip bg-neutral-900/50 backdrop-blur-sm">
       {!showSlides && (

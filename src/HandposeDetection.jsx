@@ -98,6 +98,7 @@ const HandposeDetection = ({ webcamRef, canvasRef, setFingersState }) => {
         if (webcamRef.current?.video?.readyState === 4) {
           const video = webcamRef.current.video;
           const hands = await detector.estimateHands(video);
+          console.log(hands); 
 
           if (canvasRef.current) {
             const ctx = canvasRef.current.getContext("2d");
