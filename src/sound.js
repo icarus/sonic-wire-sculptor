@@ -25,7 +25,7 @@ effects.industrialReverb = new Tone.Reverb({ decay: 1.5, wet: 0.3 }).toDestinati
 effects.industrialDistortion = new Tone.Distortion(0.8).toDestination();
 effects.industrialFilter = new Tone.Filter(100, "lowpass").toDestination();
 effects.industrialCompressor = new Tone.Compressor({
-  threshold: -30,
+  threshold: -100,
   ratio: 12,
   attack: 0.003,
   release: 0.25
@@ -33,14 +33,13 @@ effects.industrialCompressor = new Tone.Compressor({
 
 const createSynth = (type) => {
   switch (type) {
-    // Dry drum sounds
     case "kick":
       return new Tone.MembraneSynth({
         pitchDecay: 0.05,
         octaves: 5,
         oscillator: { type: "sine" },
         envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.1 }
-      }).toDestination();
+      }).chain(effects.filter);
 
     case "deep_kick":
       return new Tone.MembraneSynth({
@@ -54,7 +53,7 @@ const createSynth = (type) => {
           release: 1.5,
         },
         volume: 6
-      }).toDestination();
+      }).chain(effects.filter);
 
     case "hihat":
       return new Tone.MetalSynth({
@@ -64,20 +63,19 @@ const createSynth = (type) => {
         modulationIndex: 32,
         resonance: 4000,
         octaves: 1.5
-      }).toDestination();
+      }).chain(effects.chorus, effects.reverb);
 
     case "clap":
       return new Tone.NoiseSynth({
         noise: { type: 'white' },
         envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 }
-      }).toDestination();
+      }).chain(effects.reverb);
 
     case "snare":
       return new Tone.NoiseSynth({
         noise: { type: 'pink' },
         envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.1 }
-      }).toDestination();
-
+      }).chain(effects.filter, effects.reverb);
     // Dry retro sounds
     case "retro_bass":
       return new Tone.Synth({

@@ -224,7 +224,7 @@ export default function Slide({
                 <div className="h-px flex-1 bg-white/25" />
                 <p className="text-sm tracking-widest font-['VCR_OSD_MONO'] uppercase">Entrega Final</p>
               </BlurFade>
-              <TextGenerateEffect words="Synthema" className="text-center text-[152px] font-light mb-8 tracking-widest" />
+              <TextGenerateEffect words="Synthema" className="text-center text-[144px] font-light mb-8 tracking-widest" />
               <BlurFade delay={1.5} className="flex gap-16">
                 <div className="flex-1">
                   <p className="text-sm text-white/50 uppercase tracking-widest font-['VCR_OSD_MONO'] mb-2">CREADO POR</p>

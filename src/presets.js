@@ -4,21 +4,21 @@ export const soundPresets = {
     index: { type: "hihat", note: "A6" },
     middle: { type: "clap", note: null },
     ring: { type: "snare", note: null },
-    pinky: { type: "deep_kick", note: "C0"}
+    pinky: { type: "deep_kick", note: "C0"}      // Deep bass kick for extra low-end
   },
   "Industrial": {
     thumb: { type: "trap_kick", note: "C1" },     // Heavy kick
     index: { type: "trap_hihat", note: "A6" },    // Harsh hihat
     middle: { type: "trap_snare", note: null },   // Distorted snare
-    ring: { type: "trap_808", note: "F1" },       // Heavy 808
+    ring: { type: "trap_808", note: "E4" },       // Heavy 808
     pinky: { type: "trap_perc", note: "D5" }      // Metallic percussion
   },
   "Synth": {
-    thumb: { type: "bass", note: "C2" },
-    index: { type: "lead", note: "E4" },
-    middle: { type: "pad", note: "G4" },
-    ring: { type: "pluck", note: "B4" },
-    pinky: { type: "arp", note: "C5" }
+    thumb: { type: "dream_bass", note: "C2" },        // Soft bass
+    index: { type: "ethereal_lead", note: "A2" },      // Dreamy lead
+    middle: { type: "soft_pad", note: "G4" },          // Ambient pad
+    ring: { type: "glitch_pluck", note: "B4" },        // Shimmering pluck
+    pinky: { type: "ambient_arp", note: "C5" }         // Drifting arp
   },
   "Retro": {
     thumb: { type: "retro_bass", note: "C2" },
@@ -28,22 +28,22 @@ export const soundPresets = {
     pinky: { type: "retro_lead", note: "C5" }
   },
   "Rave": {
-    thumb: { type: "rave_kick", note: "C1" },
-    index: { type: "rave_hihat", note: "A6" },
-    middle: { type: "rave_snare", note: null },
-    ring: { type: "rave_808", note: "F1" },
-    pinky: { type: "rave_perc", note: "D5" }
+    thumb: { type: "hard_techno_kick", note: "C1" },  // Aggressive kick
+    index: { type: "acid_hihat", note: "A6" },        // Sharper hihat
+    middle: { type: "distorted_snare", note: null },   // Harder snare
+    ring: { type: "techno_808", note: "F1" },         // Deep bass
+    pinky: { type: "hard_percussion", note: "D5" }    // Metallic percussion
   }
 };
 
 export const presetPatterns = {
   "Basic": {
     pattern: [
-      [true, false, false, false, true, false, false, false],
-      [false, false, true, false, false, false, true, false],
-      [false, false, false, false, true, false, false, false],
-      [false, false, true, false, false, false, true, false],
-      [true, false, false, true, false, true, false, false]
+      [true, false, false, false, true, false, false, false],  // Kick on 1 and 5
+      [false, true, false, true, false, true, false, true],    // Snare on 2, 4, 6, 8
+      [false, false, false, true, false, false, false, false], // Clap on 4
+      [false, false, true, false, false, false, true, false],  // Hi-hat variations
+      [true, false, false, true, false, true, false, true]     // Adding kick variations
     ],
     recommendedBPM: 120,
     soundPreset: "Drums"
