@@ -19,10 +19,10 @@ export default function Timeline({
   isMuted
 }) {
   // State
-  const [currentSound, setCurrentSound] = useState("Drums");
-  const [currentPattern, setCurrentPattern] = useState("Basic");
+  const [currentSound, setCurrentSound] = useState("Industrial");
+  const [currentPattern, setCurrentPattern] = useState("Industrial");
   const [loopGrid, setLoopGrid] = useState(() => {
-    return presetPatterns["Basic"].pattern.map(row => [...row]);
+    return presetPatterns["Industrial"].pattern.map(row => [...row]);
   });
   const [activeColumn, setActiveColumn] = useState(0);
   const [progress, setProgress] = useState(0);
