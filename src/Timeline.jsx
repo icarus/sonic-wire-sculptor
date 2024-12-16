@@ -12,47 +12,59 @@ export default function Timeline({
   steps,
   bpm,
   setBpm,
-  joystickX,
-  joystickY,
-  buttonState,
+  joystickX = 512,
+  joystickY = 512,
+  buttonState = 0,
   autoPlay,
   showSlides,
   isMuted
 }) {
   const [currentPreset, setCurrentPresetState] = useState("Industrial");
+  const [currentPattern, setCurrentPattern] = useState("Rave");
 
   const loadPreset = (presetName) => {
-    setCurrentPresetState(presetName);
-    setLoopGrid(presetPatterns[presetName].pattern.map(row => [...row]));
+    const preset = presetPatterns[presetName];
+    if (!preset) return;
+
+    setLoopGrid(preset.pattern.map(row => [...row]));
+
+    // Only update BPM if it's different to avoid unnecessary rerenders
+    if (preset.recommendedBPM !== bpm) {
+      setBpm(preset.recommendedBPM);
+      setBPM(preset.recommendedBPM); // Update Tone.js BPM
+    }
+
+    // Set the corresponding sound preset if specified
+    if (preset.soundPreset) {
+      handlePresetChange(preset.soundPreset);
+    }
   };
 
   useEffect(() => {
-    const joystickThreshold = 20; // Threshold for joystick X-axis to avoid drifting
     const timeoutId = setTimeout(() => {
       if (buttonState === 0) {
-        if (Math.abs(joystickX - 512) > joystickThreshold) {
-          if (joystickX > 512) {
-            setBpm(prev => Math.min(200, prev + 1));
-          } else if (joystickX < 512) {
-            setBpm(prev => Math.max(60, prev - 1));
-          }
+        // When button is pressed - Control BPM
+        if (joystickX > 512) {
+          setBpm(prev => Math.min(200, prev + 1));
+        } else if (joystickX < 512) {
+          setBpm(prev => Math.max(60, prev - 1));
         }
       } else {
+        // When button is not pressed - Control Presets
         const presetNames = Object.keys(presetPatterns);
         const currentIndex = presetNames.indexOf(currentPreset);
 
-        if (Math.abs(joystickX - 512) > joystickThreshold) {
-          if (joystickX > 512 && currentIndex < presetNames.length - 1) {
-            loadPreset(presetNames[currentIndex + 1]);
-          } else if (joystickX < 512 && currentIndex > 0) {
-            loadPreset(presetNames[currentIndex - 1]);
-          }
+        if (joystickX > 512 && currentIndex < presetNames.length - 1) {
+          loadPreset(presetNames[currentIndex + 1]);
+        } else if (joystickX < 512 && currentIndex > 0) {
+          loadPreset(presetNames[currentIndex - 1]);
         }
       }
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [joystickX, buttonState, setBpm, currentPreset]);
+  }, [joystickX, buttonState, setBpm, currentPreset, loadPreset]);
+
 
   const [loopGrid, setLoopGrid] = useState(() => {
     return presetPatterns["Rave"].pattern.map(row => [...row]);
@@ -63,6 +75,7 @@ export default function Timeline({
   const gridRef = useRef(null);
   const sequenceRef = useRef(null);
   const animationRef = useRef(null);
+  const joystickThreshold = 20;
 
   // Initialize audio and sequence on mount
   useEffect(() => {

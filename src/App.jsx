@@ -87,18 +87,6 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (joystickX > 512) {
-        setBpm(prev => Math.min(200, prev + 1));
-      } else if (joystickX < 512) {
-        setBpm(prev => Math.max(60, prev - 1));
-      }
-    }, 100); // 100ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [joystickX]);
-
   return (
     <div className="flex flex-col max-w-full h-svh bg-neutral-900">
       <div className="flex-grow">

@@ -1,38 +1,43 @@
 export const soundPresets = {
   "Drums": {
-    thumb: { type: "kick", note: "C1" },
-    index: { type: "hihat", note: "A6" },
-    middle: { type: "clap", note: null },
-    ring: { type: "snare", note: null },
-    pinky: { type: "deep_kick", note: "C0"}
+    thumb: { type: "kick", note: "C1" },      // Punchy kick
+    index: { type: "hihat", note: "A7" },     // Crisp, higher hihat
+    middle: { type: "clap", note: null },     // Sharp clap
+    ring: { type: "snare", note: null },      // Tight snare
+    pinky: { type: "deep_kick", note: "G0"}   // Even deeper kick for contrast
   },
   "Industrial": {
-    thumb: { type: "trap_kick", note: "G1" },
-    index: { type: "trap_hihat", note: "D6" },
-    middle: { type: "pad", note: "G4" },
-    ring: { type: "pluck", note: "B3" },
-    pinky: { type: "bass", note: "G2" }
+    thumb: { type: "trap_kick", note: "F1" },     // Aggressive kick
+    index: { type: "trap_hihat", note: "D7" },    // Harsh, metallic hihat
+    middle: { type: "trap_snare", note: null },    // Distorted snare
+    ring: { type: "trap_808", note: "G1" },       // Heavy 808
+    pinky: { type: "trap_perc", note: "D5" }      // Metallic percussion
   },
   "Synth": {
-    thumb: { type: "bass", note: "C2" },
-    index: { type: "lead", note: "E4" },
-    middle: { type: "pad", note: "G4" },
-    ring: { type: "pluck", note: "B4" },
-    pinky: { type: "arp", note: "C5" }
+    thumb: { type: "pad", note: "C2" },           // Dreamy pad bass
+    index: { type: "lead", note: "G4" },          // Ethereal lead
+    middle: { type: "pad", note: "E4" },          // Floating pad
+    ring: { type: "lead", note: "B4" },           // Airy lead
+    pinky: { type: "pad", note: "D5" },           // High dreamy pad
+    effects: {
+      reverb: { decay: 5.0, wet: 0.6 },           // Long, wet reverb
+      delay: { time: "8n", feedback: 0.4 },       // Spacious delay
+      chorus: { frequency: 1.5, depth: 0.7 }      // Rich chorus
+    }
   },
   "Percussion": {
-    thumb: { type: "conga", note: "C3" },
-    index: { type: "shaker", note: "D6" },
-    middle: { type: "cowbell", note: "G5" },
-    ring: { type: "tambourine", note: null },
-    pinky: { type: "woodblock", note: "A5" }
+    thumb: { type: "conga", note: "C3" },         // Deep conga
+    index: { type: "hihat", note: "F#6" },        // Crisp shaker
+    middle: { type: "cymbal", note: "A5" },       // Bright cymbal
+    ring: { type: "clap", note: null },           // Sharp hand clap
+    pinky: { type: "cymbal", note: "D6" }         // High bell-like cymbal
   },
   "Retro": {
-    thumb: { type: "retro_bass", note: "C2" },
-    index: { type: "retro_blip", note: "E5" },
-    middle: { type: "retro_noise", note: null },
-    ring: { type: "retro_square", note: "G4" },
-    pinky: { type: "retro_lead", note: "C5" }
+    thumb: { type: "retro_bass", note: "C2" },    // Fat square bass
+    index: { type: "retro_blip", note: "E5" },    // Classic 8-bit blip
+    middle: { type: "retro_noise", note: null },   // Filtered noise burst
+    ring: { type: "retro_square", note: "G4" },   // Pure square lead
+    pinky: { type: "retro_lead", note: "C5" }     // Chippy lead
   }
 };
 
@@ -78,7 +83,7 @@ export const presetPatterns = {
       [false, true, false, false, true, false, false, true],
       [true, false, false, false, true, false, false, false]
     ],
-    recommendedBPM: 150,
+    recommendedBPM: 140,
     soundPreset: "Industrial"
   }
 };
