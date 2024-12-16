@@ -4,7 +4,7 @@ import { soundPresets } from './presets';
 let synths = {};
 let effects = {};
 let isInitialized = false;
-let currentPreset = "Drums";
+let currentPreset = "Industrial";
 let isMuted = false;
 
 // Initialize effects with gentler settings
@@ -296,30 +296,38 @@ const createSynth = (type) => {
 export const initializeAudio = async () => {
   await Tone.start();
   console.log('Audio is ready');
-
-  synths.thumb = createSynth("dreamy_pad");
-  synths.index = createSynth("ambient_texture");
-  synths.middle = createSynth("dreamy_lead");
-  synths.ring = createSynth("dreamy_pad");
-  synths.pinky = createSynth("ambient_texture");
-
+  createSynthsForPreset(currentPreset);
   Tone.Transport.start();
+};
+
+const createSynthsForPreset = (presetName) => {
+  // Clean up existing synths
+  Object.values(synths).forEach(synth => {
+    synth.dispose();
+  });
+  synths = {};
+
+  const preset = soundPresets[presetName];
+  if (!preset) return;
+
+  // Create new synths based on preset
+  Object.entries(preset).forEach(([finger, config]) => {
+    if (finger !== 'effects') {
+      synths[finger] = createSynth(config.type);
+    }
+  });
 };
 
 export const playSound = (finger) => {
   try {
-    const notes = {
-      thumb: "C3",
-      index: "G3",
-      middle: "E4",
-      ring: "A4",
-      pinky: "C5"
-    };
+    const preset = soundPresets[currentPreset];
+    if (!preset || !preset[finger]) return;
 
     const synth = synths[finger];
     if (!synth) return;
 
-    synth.triggerAttackRelease(notes[finger], "4n");
+    const note = preset[finger].note || "C4";
+    synth.triggerAttackRelease(note, "8n");
   } catch (error) {
     console.error("Error in playSound:", error);
   }
@@ -332,58 +340,7 @@ export const setBPM = (bpm) => {
 export const setCurrentPreset = (presetName) => {
   if (soundPresets[presetName]) {
     currentPreset = presetName;
-    const preset = soundPresets[presetName];
-
-    // Recreate synths with new preset
-    Object.keys(synths).forEach(finger => {
-      if (synths[finger]) {
-        synths[finger].dispose();
-      }
-      if (preset[finger]) {
-        synths[finger] = createSynth(preset[finger].type);
-      }
-    });
-
-    // Apply preset-specific effects
-    if (preset.effects) {
-      // Reset all effects to default values first
-      effects.reverb.set({ decay: 2.0, wet: 0.3 });
-      effects.delay.set({ delayTime: "8n", feedback: 0.15 });
-      effects.distortion.set({ distortion: 0.1 });
-      effects.chorus.set({ frequency: 3, delayTime: 1.5, depth: 0.3 });
-      effects.filter.set({ frequency: 3000, type: "lowpass" });
-
-      // Apply preset effects
-      if (preset.effects.reverb) {
-        effects.reverb.set({
-          decay: preset.effects.reverb.decay,
-          wet: preset.effects.reverb.wet
-        });
-      }
-      if (preset.effects.delay) {
-        effects.delay.set({
-          delayTime: preset.effects.delay.time,
-          feedback: preset.effects.delay.feedback
-        });
-      }
-      if (preset.effects.distortion) {
-        effects.distortion.set({
-          distortion: preset.effects.distortion.amount
-        });
-      }
-      if (preset.effects.chorus) {
-        effects.chorus.set({
-          frequency: preset.effects.chorus.frequency,
-          depth: preset.effects.chorus.depth
-        });
-      }
-      if (preset.effects.filter) {
-        effects.filter.set({
-          frequency: preset.effects.filter.frequency,
-          type: preset.effects.filter.type
-        });
-      }
-    }
+    createSynthsForPreset(presetName);
   }
 };
 

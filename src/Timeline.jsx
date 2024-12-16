@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import { playSound } from "./sound";
-import WaveformVisualizer from "./WaveformVisualizer";
 import { Button } from "./components/ui/button";
 import { presetPatterns, soundPresets } from './presets';
 import { initializeAudio, setBPM, setCurrentPreset } from './sound';
@@ -12,115 +11,76 @@ export default function Timeline({
   steps,
   bpm,
   setBpm,
-  joystickX = 512,
-  joystickY = 512,
-  buttonState = 0,
+  joystickX,
+  joystickY,
+  buttonState,
   autoPlay,
   showSlides,
   isMuted
 }) {
-  const [currentPreset, setCurrentPresetState] = useState("Industrial");
-  const [currentPattern, setCurrentPattern] = useState("Rave");
+  // State
+  const [currentSound, setCurrentSound] = useState("Drums");
+  const [currentPattern, setCurrentPattern] = useState("Basic");
+  const [loopGrid, setLoopGrid] = useState(() => {
+    return presetPatterns["Basic"].pattern.map(row => [...row]);
+  });
+  const [activeColumn, setActiveColumn] = useState(0);
+  const [progress, setProgress] = useState(0);
 
+  // Refs
+  const sequenceRef = useRef(null);
+  const animationRef = useRef(null);
+
+  // Load a preset pattern
   const loadPreset = (presetName) => {
     const preset = presetPatterns[presetName];
     if (!preset) return;
 
+    setCurrentPattern(presetName);
     setLoopGrid(preset.pattern.map(row => [...row]));
-
-    // Only update BPM if it's different to avoid unnecessary rerenders
-    if (preset.recommendedBPM !== bpm) {
-      setBpm(preset.recommendedBPM);
-      setBPM(preset.recommendedBPM); // Update Tone.js BPM
-    }
-
-    // Set the corresponding sound preset if specified
-    if (preset.soundPreset) {
-      handlePresetChange(preset.soundPreset);
-    }
+    setBpm(preset.recommendedBPM);
+    setBPM(preset.recommendedBPM);
+    setCurrentSound(preset.soundPreset);
+    setCurrentPreset(preset.soundPreset);
   };
 
+  // Handle sound preset change
+  const handleSoundChange = (preset) => {
+    setCurrentSound(preset);
+    setCurrentPreset(preset);
+  };
+
+  // Initialize audio sequence
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (buttonState === 0) {
-        // When button is pressed - Control BPM
-        if (joystickX > 512) {
-          setBpm(prev => Math.min(200, prev + 1));
-        } else if (joystickX < 512) {
-          setBpm(prev => Math.max(60, prev - 1));
-        }
-      } else {
-        // When button is not pressed - Control Presets
-        const presetNames = Object.keys(presetPatterns);
-        const currentIndex = presetNames.indexOf(currentPreset);
-
-        if (joystickX > 512 && currentIndex < presetNames.length - 1) {
-          loadPreset(presetNames[currentIndex + 1]);
-        } else if (joystickX < 512 && currentIndex > 0) {
-          loadPreset(presetNames[currentIndex - 1]);
-        }
-      }
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [joystickX, buttonState, setBpm, currentPreset, loadPreset]);
-
-
-  const [loopGrid, setLoopGrid] = useState(() => {
-    return presetPatterns["Rave"].pattern.map(row => [...row]);
-  });
-  const [activeColumn, setActiveColumn] = useState(0);
-  const [lastFingerActivation, setLastFingerActivation] = useState({});
-  const [progress, setProgress] = useState(0);
-  const gridRef = useRef(null);
-  const sequenceRef = useRef(null);
-  const animationRef = useRef(null);
-  const joystickThreshold = 20;
-
-  // Initialize audio and sequence on mount
-  useEffect(() => {
-    let sequence;
     const setupAudio = async () => {
-      try {
-        await initializeAudio();
-        // Set Drums preset as default
-        setCurrentPreset("Industrial");
-        console.log('Audio initialized successfully');
+      await initializeAudio();
 
-        // Stop previous sequence if it exists
-        if (sequenceRef.current) {
-          sequenceRef.current.stop();
-          sequenceRef.current.dispose();
-        }
+      if (sequenceRef.current) {
+        sequenceRef.current.stop();
+        sequenceRef.current.dispose();
+      }
 
-        // Create a sequence that repeats
-        sequence = new Tone.Sequence(
-          (time, col) => {
-            if (!isMuted) {
-              const fingerNames = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+      const sequence = new Tone.Sequence(
+        (time, col) => {
+          if (!isMuted) {
+            const fingerNames = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+            loopGrid.forEach((row, rowIndex) => {
+              if (row[col]) {
+                playSound(fingerNames[rowIndex]);
+              }
+            });
+          }
+        },
+        [...Array(steps).keys()],
+        "8n"
+      );
 
-              // Play sounds for active cells in this column
-              loopGrid.forEach((row, rowIndex) => {
-                if (row[col]) {
-                  playSound(fingerNames[rowIndex]);
-                }
-              });
-            }
-          },
-          [...Array(steps).keys()],
-          "8n"
-        );
+      sequenceRef.current = sequence;
+      sequence.start(0);
 
-        sequenceRef.current = sequence;
-        sequence.start(0);
-
-        // Start transport if autoPlay is true
-        if (autoPlay) {
-          await Tone.start();
-          Tone.Transport.start();
-        }
-      } catch (error) {
-        console.error('Error setting up audio:', error);
+      if (autoPlay) {
+        await Tone.start();
+        Tone.Transport.start();
       }
     };
 
@@ -134,10 +94,10 @@ export default function Timeline({
     };
   }, [steps, loopGrid, autoPlay, isMuted]);
 
-  // Reference existing effects from Timeline.jsx
+  // Handle progress animation
   useEffect(() => {
-    let lastTime = null;
     const totalDuration = (60 / bpm) * (steps / 2);
+    let lastTime = null;
 
     const animate = (currentTime) => {
       if (!lastTime) lastTime = currentTime;
@@ -157,139 +117,93 @@ export default function Timeline({
     };
 
     animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    return () => cancelAnimationFrame(animationRef.current);
   }, [bpm, steps]);
 
   // Update active column based on progress
   useEffect(() => {
-    const column = Math.floor(progress * steps);
-    setActiveColumn(column);
+    setActiveColumn(Math.floor(progress * steps));
   }, [progress, steps]);
 
-  // Update BPM
+  // Update BPM in Tone.js
   useEffect(() => {
-    Tone.getTransport().bpm.value = bpm;
+    Tone.Transport.bpm.value = bpm;
   }, [bpm]);
 
-  // Handle finger activation
+  // Handle finger interactions
   useEffect(() => {
     Object.entries(fingersState).forEach(([finger, isActive]) => {
-      const now = Date.now();
       if (isActive) {
-        if (!lastFingerActivation[finger] || (now - lastFingerActivation[finger]) > 300) {
-          setLoopGrid(prevGrid => {
-            const newGrid = prevGrid.map(row => [...row]);
-            const rowIndex = ['thumb', 'index', 'middle', 'ring', 'pinky'].indexOf(finger);
-            newGrid[rowIndex][activeColumn] = !newGrid[rowIndex][activeColumn];
-            return newGrid;
-          });
-          setLastFingerActivation(prev => ({
-            ...prev,
-            [finger]: now
-          }));
-        }
+        setLoopGrid(prevGrid => {
+          const newGrid = prevGrid.map(row => [...row]);
+          const rowIndex = ['thumb', 'index', 'middle', 'ring', 'pinky'].indexOf(finger);
+          newGrid[rowIndex][activeColumn] = !newGrid[rowIndex][activeColumn];
+          return newGrid;
+        });
       }
     });
   }, [fingersState, activeColumn]);
-
-  // Add this effect to handle muting
-  useEffect(() => {
-    if (sequenceRef.current) {
-      if (isMuted) {
-        sequenceRef.current.mute = true;
-      } else {
-        sequenceRef.current.mute = false;
-      }
-    }
-  }, [isMuted]);
-
-  const clearGrid = () => {
-    const emptyGrid = Array(5).fill().map(() => Array(steps).fill(false));
-    setLoopGrid(emptyGrid);
-  };
-
-  const handlePresetChange = (preset) => {
-    setCurrentPresetState(preset);
-    setCurrentPreset(preset); // This calls the audio function
-  };
 
   return (
     <div className="relative size-full flex flex-col overflow-clip bg-neutral-900/50 backdrop-blur-sm">
       {!showSlides && (
         <div className="absolute top-4 right-4 z-10 flex gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <label className="text-white">Sound:</label>
-            <select
-              className="bg-neutral-800 text-white rounded px-2 py-1"
-              value={currentPreset}
-              onChange={(e) => handlePresetChange(e.target.value)}
-            >
-              {Object.keys(soundPresets).map((preset) => (
-                <option key={preset} value={preset}>
-                  {preset}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-white">BPM:</label>
-            <input
-              type="number"
-              value={bpm}
-              onChange={(e) => {
-                const newBPM = Math.min(200, Math.max(60, Number(e.target.value) || 60));
-                setBPM(newBPM);
-                setBpm(newBPM);
-              }}
-              className="w-16 bg-neutral-800 text-white rounded px-2 py-1"
-              min="60"
-              max="200"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            {Object.keys(presetPatterns).map((presetName) => (
-              <Button
-                key={presetName}
-                onClick={() => loadPreset(presetName)}
-                variant="secondary"
-                className={cn(
-                  "px-3 py-1.5 bg-neutral-800 text-white rounded-md text-sm hover:bg-neutral-700",
-                  presetPatterns[presetName].soundPreset === currentPreset ? "!bg-white !text-black" : ""
-                )}
-              >
-                {presetName}
-              </Button>
+          <select
+            className="bg-neutral-800 text-white rounded px-2 py-1"
+            value={currentSound}
+            onChange={(e) => handleSoundChange(e.target.value)}
+          >
+            {Object.keys(soundPresets).map((preset) => (
+              <option key={preset} value={preset}>{preset}</option>
             ))}
-          </div>
+          </select>
+
+          <input
+            type="number"
+            value={bpm}
+            onChange={(e) => {
+              const newBPM = Math.min(200, Math.max(60, Number(e.target.value)));
+              setBPM(newBPM);
+              setBpm(newBPM);
+            }}
+            className="w-16 bg-neutral-800 text-white rounded px-2 py-1"
+            min="60"
+            max="200"
+          />
+
+          {Object.keys(presetPatterns).map((presetName) => (
+            <Button
+              key={presetName}
+              onClick={() => loadPreset(presetName)}
+              variant="secondary"
+              className={cn(
+                "bg-neutral-800 text-white rounded-md",
+                currentPattern === presetName ? "!bg-white !text-black" : ""
+              )}
+            >
+              {presetName}
+            </Button>
+          ))}
 
           <Button
-            onClick={clearGrid}
-            className="px-3 py-1.5 !bg-white hover:opacity-80 text-black rounded-md text-sm"
+            onClick={() => setLoopGrid(Array(5).fill().map(() => Array(steps).fill(false)))}
+            className="!bg-white text-black rounded-md"
           >
-            Clear All
+            Clear
           </Button>
         </div>
       )}
 
-      {/* Grid */}
-      <div ref={gridRef} className="absolute inset-0 flex flex-col gap-0.5 justify-between w-full">
+      <div className="absolute inset-0 flex flex-col gap-0.5 justify-between w-full">
         {loopGrid.map((row, rowIndex) => (
-          <div key={rowIndex} className="relative w-full h-full flex gap-0.5 justify-center items-center">
+          <div key={rowIndex} className="relative w-full h-full flex gap-0.5">
             {row.map((isActive, colIndex) => (
               <div
                 key={colIndex}
                 className={`
-                  relative size-full cursor-pointer rounded-sm transition-all duration-150
+                  relative size-full cursor-pointer rounded-sm transition-all
                   ${isActive ? "!bg-white" : "bg-neutral-800"}
-                  ${Math.floor(progress * steps) === colIndex ? "bg-white/25" : ""}
-                  hover:bg-opacity-80
+                  ${activeColumn === colIndex ? "bg-white/25" : ""}
                 `}
                 onClick={() => {
                   setLoopGrid(prevGrid => {
@@ -303,7 +217,6 @@ export default function Timeline({
           </div>
         ))}
 
-        {/* Red line */}
         <div
           className="absolute inset-y-0 w-px bg-red-500"
           style={{
@@ -311,11 +224,6 @@ export default function Timeline({
             transition: 'none'
           }}
         />
-      </div>
-
-      {/* Waveform */}
-      <div className="absolute inset-x-0 bottom-0 h-24 opacity-30">
-        <WaveformVisualizer activeColumn={Math.floor(progress * steps)} loopGrid={loopGrid} />
       </div>
     </div>
   );
