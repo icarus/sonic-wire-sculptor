@@ -112,7 +112,7 @@ function App() {
         )}
       >
         {!showSlides && (
-          <div className="hidden w-full h-full relative">
+          <div className="absolute bottom-4 right-4 w-fu">
             <WebcamDisplay
               webcamRef={webcamRef}
               canvasRef={canvasRef}
